@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: LuCI: statistics\n"
 "POT-Creation-Date: 2017-10-17 22:00+0300\n"
-"PO-Revision-Date: 2020-03-01 16:12+0000\n"
+"PO-Revision-Date: 2020-08-04 18:32+0000\n"
 "Last-Translator: Anton Kikin <a.a.kikin@gmail.com>\n"
 "Language-Team: Russian <https://hosted.weblate.org/projects/openwrt/"
 "luciapplicationsstatistics/ru/>\n"
@@ -10,9 +10,9 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=3; plural=n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<="
-"4 && (n%100<10 || n%100>=20) ? 1 : 2;\n"
-"X-Generator: Weblate 4.0-dev\n"
+"Plural-Forms: nplurals=3; plural=n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
+"%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2;\n"
+"X-Generator: Weblate 4.2-dev\n"
 "Project-Info: Это технический перевод, не дословный. Главное-удобный русский "
 "интерфейс, все проверялось в графическом режиме, совместим с другими apps\n"
 
@@ -171,6 +171,10 @@ msgstr "Переключения контекста"
 msgid "Context switch monitoring enabled"
 msgstr "Мониторинг переключений контекста включён"
 
+#: applications/luci-app-statistics/htdocs/luci-static/resources/view/statistics/plugins/syslog.js:23
+msgid "Controls which notifications should be sent to syslog."
+msgstr "Определяет, какие уведомления должны быть отправлены в syslog."
+
 #: applications/luci-app-statistics/htdocs/luci-static/resources/view/statistics/plugins/network.js:28
 msgid "Create statistics about the network plugin itself"
 msgstr "Собирать статистику о самом сетевом плагине"
@@ -282,6 +286,7 @@ msgstr "Включить статистику"
 #: applications/luci-app-statistics/htdocs/luci-static/resources/view/statistics/plugins/processes.js:12
 #: applications/luci-app-statistics/htdocs/luci-static/resources/view/statistics/plugins/rrdtool.js:12
 #: applications/luci-app-statistics/htdocs/luci-static/resources/view/statistics/plugins/sensors.js:21
+#: applications/luci-app-statistics/htdocs/luci-static/resources/view/statistics/plugins/syslog.js:12
 #: applications/luci-app-statistics/htdocs/luci-static/resources/view/statistics/plugins/tcpconns.js:12
 #: applications/luci-app-statistics/htdocs/luci-static/resources/view/statistics/plugins/thermal.js:13
 #: applications/luci-app-statistics/htdocs/luci-static/resources/view/statistics/plugins/unixsock.js:13
@@ -366,6 +371,13 @@ msgstr "Сбросить кэш после"
 msgid "Forwarding between listen and server addresses"
 msgstr "Перенаправление между локальным адресом и адресом сервера"
 
+#: applications/luci-app-statistics/htdocs/luci-static/resources/view/statistics/plugins/df.js:92
+msgid ""
+"Free space, reserved space and used space is reported as relative values"
+msgstr ""
+"Свободное, зарезервированное и использованное пространство отображать как "
+"относительные значения"
+
 #: applications/luci-app-statistics/htdocs/luci-static/resources/view/statistics/plugins/openvpn.js:21
 msgid "Gather compression statistics"
 msgstr "Сбор статистики сжатия"
@@ -378,7 +390,11 @@ msgstr "Основные плагины"
 msgid "Generate a separate graph for each logged user"
 msgstr "Создать отдельный график для каждого авторизованного пользователя"
 
-#: applications/luci-app-statistics/root/usr/share/luci/menu.d/luci-app-statistics.json:14
+#: applications/luci-app-statistics/root/usr/share/rpcd/acl.d/luci-app-statistics.json:3
+msgid "Grant access to statistics resources"
+msgstr "Предоставить доступ к ресурсам статистики"
+
+#: applications/luci-app-statistics/root/usr/share/luci/menu.d/luci-app-statistics.json:15
 msgid "Graphs"
 msgstr "Графики"
 
@@ -401,7 +417,7 @@ msgid ""
 "certain threshold values have been reached. The values leading to invocation "
 "will be fed to the the called programs stdin."
 msgstr ""
-"Здесь вы можете определить  внешние команды, которые будут выполнены, когда "
+"Здесь вы можете определить внешние команды, которые будут выполнены, когда "
 "значения достигнут определенного порога. Значения будут переданы на "
 "стандартный ввод вызванным программам."
 
@@ -489,6 +505,10 @@ msgstr "Мониторинг загрузки включён"
 #: applications/luci-app-statistics/htdocs/luci-static/resources/view/statistics/graphs.js:108
 msgid "Loading data…"
 msgstr "Загрузка данных…"
+
+#: applications/luci-app-statistics/htdocs/luci-static/resources/view/statistics/plugins/syslog.js:14
+msgid "Log level"
+msgstr "Уровень журналирования"
 
 #: applications/luci-app-statistics/htdocs/luci-static/resources/view/statistics/plugins/iptables.js:20
 msgid "Match IPv4 iptables rules"
@@ -596,7 +616,7 @@ msgstr "Мониторить удаленные порты"
 msgid "Monitoring %s and %s"
 msgstr "Мониторинг %s и %s"
 
-#: applications/luci-app-statistics/htdocs/luci-static/resources/view/statistics/plugins/df.js:103
+#: applications/luci-app-statistics/htdocs/luci-static/resources/view/statistics/plugins/df.js:106
 msgid "Monitoring %s, %s, %s"
 msgstr "Мониторинг %s, %s, %s"
 
@@ -656,7 +676,7 @@ msgstr[2] "Мониторинг всех сенсоров, кроме %d"
 msgid "Monitoring all disks"
 msgstr "Мониторинг всех дисков"
 
-#: applications/luci-app-statistics/htdocs/luci-static/resources/view/statistics/plugins/df.js:103
+#: applications/luci-app-statistics/htdocs/luci-static/resources/view/statistics/plugins/df.js:106
 msgid "Monitoring all except %s, %s, %s"
 msgstr "Мониторинг всего, кроме %s, %s, %s"
 
@@ -670,7 +690,7 @@ msgstr "Мониторинг всех интерфейсов"
 msgid "Monitoring all interrupts"
 msgstr "Мониторинг всех прерываний"
 
-#: applications/luci-app-statistics/htdocs/luci-static/resources/view/statistics/plugins/df.js:101
+#: applications/luci-app-statistics/htdocs/luci-static/resources/view/statistics/plugins/df.js:104
 msgid "Monitoring all partitions"
 msgstr "Мониторинг всех разделов"
 
@@ -762,7 +782,7 @@ msgstr "Более подробная информация о частоте и 
 
 #: applications/luci-app-statistics/htdocs/luci-static/resources/view/statistics/plugins/curl.js:25
 msgid "Name"
-msgstr "Имя"
+msgstr "Название"
 
 #: applications/luci-app-statistics/htdocs/luci-static/resources/statistics/rrdtool/definitions/netlink.js:7
 #: applications/luci-app-statistics/root/usr/share/luci/statistics/plugins/netlink.json:2
@@ -800,6 +820,10 @@ msgid ""
 msgstr ""
 "Внимание: все операции осуществляются под пользователем «nobody», "
 "соответственно все файлы *.rrd и папки будут доступны любому пользователю."
+
+#: applications/luci-app-statistics/htdocs/luci-static/resources/view/statistics/plugins/syslog.js:23
+msgid "Notify level"
+msgstr "Уровень уведомлений"
 
 #: applications/luci-app-statistics/htdocs/luci-static/resources/view/statistics/collectd.js:77
 msgid "Number of threads for data collection"
@@ -925,6 +949,14 @@ msgstr "Количество «поколений» данных в архиве
 msgid "Rule monitoring enabled"
 msgstr "Мониторинг правил включён"
 
+#: applications/luci-app-statistics/htdocs/luci-static/resources/statistics/rrdtool/definitions/sqm.js:7
+msgid "SQM"
+msgstr "SQM"
+
+#: applications/luci-app-statistics/htdocs/luci-static/resources/statistics/rrdtool/definitions/sqmcake.js:7
+msgid "SQM-Cake"
+msgstr "SQM-Cake"
+
 #: applications/luci-app-statistics/htdocs/luci-static/resources/view/statistics/plugins/exec.js:24
 #: applications/luci-app-statistics/htdocs/luci-static/resources/view/statistics/plugins/exec.js:44
 msgid "Script"
@@ -968,7 +1000,11 @@ msgstr "Порт сервера"
 msgid "Set the maximum size for datagrams sent over the network"
 msgstr "Установка максимального размера датаграмм, отправляемых по сети"
 
-#: applications/luci-app-statistics/root/usr/share/luci/menu.d/luci-app-statistics.json:23
+#: applications/luci-app-statistics/htdocs/luci-static/resources/view/statistics/plugins/syslog.js:14
+msgid "Sets the syslog log-level."
+msgstr "Устанавливает уровень журналирования syslog."
+
+#: applications/luci-app-statistics/root/usr/share/luci/menu.d/luci-app-statistics.json:24
 msgid "Setup"
 msgstr "Настройка"
 
@@ -1060,6 +1096,18 @@ msgstr "Сохраняемые промежутки времени"
 msgid "Storing CSV data in %s"
 msgstr "Сохранение CSV данных в %s"
 
+#: applications/luci-app-statistics/root/usr/share/luci/statistics/plugins/syslog.json:2
+msgid "Syslog"
+msgstr "Syslog"
+
+#: applications/luci-app-statistics/htdocs/luci-static/resources/view/statistics/plugins/syslog.js:6
+msgid "Syslog Plugin Configuration"
+msgstr "Настройка плагина «Syslog»"
+
+#: applications/luci-app-statistics/htdocs/luci-static/resources/view/statistics/plugins/syslog.js:32
+msgid "Syslog enabled"
+msgstr "Syslog включён"
+
 #: applications/luci-app-statistics/htdocs/luci-static/resources/statistics/rrdtool/definitions/load.js:7
 #: applications/luci-app-statistics/root/usr/share/luci/statistics/plugins/load.json:2
 msgid "System Load"
@@ -1108,6 +1156,12 @@ msgid ""
 "status."
 msgstr ""
 "Плагин «OpenVPN» собирает информацию о текущем состоянии VPN подключения."
+
+#: applications/luci-app-statistics/htdocs/luci-static/resources/view/statistics/plugins/syslog.js:7
+msgid ""
+"The SysLog plugin receives log messages from the daemon and dispatches them "
+"to syslog."
+msgstr "Плагин «SysLog» получает сообщения от служб и отправляет их в syslog."
 
 #: applications/luci-app-statistics/htdocs/luci-static/resources/view/statistics/plugins/iptables.js:132
 msgid "The chain name must not contain spaces"
@@ -1473,14 +1527,14 @@ msgstr "Настройка плагина «cUrl»"
 msgid "none"
 msgstr "ничего"
 
-#: applications/luci-app-statistics/htdocs/luci-static/resources/view/statistics/plugins/df.js:104
+#: applications/luci-app-statistics/htdocs/luci-static/resources/view/statistics/plugins/df.js:107
 msgid "one device"
 msgid_plural "%d devices"
 msgstr[0] "одно устройство"
 msgstr[1] "%d устройства"
 msgstr[2] "%d устройств"
 
-#: applications/luci-app-statistics/htdocs/luci-static/resources/view/statistics/plugins/df.js:106
+#: applications/luci-app-statistics/htdocs/luci-static/resources/view/statistics/plugins/df.js:109
 msgid "one filesystem type"
 msgid_plural "%d filesystem types"
 msgstr[0] "один тип файловой системы"
@@ -1494,7 +1548,7 @@ msgstr[0] "один локальный порт"
 msgstr[1] "%d локальных порта"
 msgstr[2] "%d локальных портов"
 
-#: applications/luci-app-statistics/htdocs/luci-static/resources/view/statistics/plugins/df.js:105
+#: applications/luci-app-statistics/htdocs/luci-static/resources/view/statistics/plugins/df.js:108
 msgid "one mount"
 msgid_plural "%d mounts"
 msgstr[0] "одна точка монтирования"

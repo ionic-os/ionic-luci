@@ -1,14 +1,14 @@
 msgid ""
 msgstr ""
-"PO-Revision-Date: 2020-02-25 09:44+0000\n"
-"Last-Translator: Trevor <wowpapa3232@gmail.com>\n"
+"PO-Revision-Date: 2020-07-08 12:44+0000\n"
+"Last-Translator: Hulen <shift0106@gmail.com>\n"
 "Language-Team: Chinese (Traditional) <https://hosted.weblate.org/projects/"
 "openwrt/luciapplicationsbanip/zh_Hant/>\n"
 "Language: zh_Hant\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 4.0-dev\n"
+"X-Generator: Weblate 4.2-dev\n"
 
 #: applications/luci-app-banip/luasrc/view/banip/ripeview.htm:89
 msgid "ASN Overview"
@@ -26,7 +26,7 @@ msgstr ""
 msgid "Additional trigger delay in seconds before banIP processing begins."
 msgstr ""
 
-#: applications/luci-app-banip/luasrc/controller/banip.lua:21
+#: applications/luci-app-banip/luasrc/controller/banip.lua:25
 msgid "Advanced"
 msgstr "進階"
 
@@ -73,7 +73,7 @@ msgstr ""
 
 #: applications/luci-app-banip/luasrc/model/cbi/banip/overview_tab.lua:72
 msgid "Description"
-msgstr "說明"
+msgstr "描述"
 
 #: applications/luci-app-banip/luasrc/model/cbi/banip/overview_tab.lua:134
 msgid "Download Options"
@@ -81,23 +81,23 @@ msgstr ""
 
 #: applications/luci-app-banip/luasrc/model/cbi/banip/overview_tab.lua:126
 msgid "Download Utility"
-msgstr "下載實用程式"
+msgstr "下載公用程式"
 
 #: applications/luci-app-banip/luasrc/view/banip/runtime.htm:126
 msgid "Download Utility, RT Monitor"
 msgstr ""
 
-#: applications/luci-app-banip/luasrc/controller/banip.lua:22
+#: applications/luci-app-banip/luasrc/controller/banip.lua:26
 msgid "Edit Blacklist"
-msgstr "編輯拉黑檔案"
+msgstr "編輯黑名單"
 
-#: applications/luci-app-banip/luasrc/controller/banip.lua:24
+#: applications/luci-app-banip/luasrc/controller/banip.lua:28
 msgid "Edit Configuration"
 msgstr "編輯設定"
 
-#: applications/luci-app-banip/luasrc/controller/banip.lua:23
+#: applications/luci-app-banip/luasrc/controller/banip.lua:27
 msgid "Edit Whitelist"
-msgstr ""
+msgstr "編輯白名單"
 
 #: applications/luci-app-banip/luasrc/model/cbi/banip/overview_tab.lua:20
 msgid "Enable banIP"
@@ -131,6 +131,10 @@ msgstr ""
 msgid "Geo Location"
 msgstr ""
 
+#: applications/luci-app-banip/root/usr/share/rpcd/acl.d/luci-app-banip.json:3
+msgid "Grant UCI access for luci-app-banip"
+msgstr ""
+
 #: applications/luci-app-banip/luasrc/view/banip/ripeview.htm:95
 msgid "IANA Information"
 msgstr "IANA 資訊"
@@ -147,7 +151,7 @@ msgstr ""
 msgid "IPSet Sources"
 msgstr ""
 
-#: applications/luci-app-banip/luasrc/controller/banip.lua:18
+#: applications/luci-app-banip/luasrc/controller/banip.lua:22
 msgid "IPSet-Lookup"
 msgstr ""
 
@@ -175,7 +179,7 @@ msgstr ""
 
 #: applications/luci-app-banip/luasrc/view/banip/runtime.htm:144
 msgid "Last Run"
-msgstr ""
+msgstr "最後執行"
 
 #: applications/luci-app-banip/luasrc/view/banip/ipsetview.htm:59
 #: applications/luci-app-banip/luasrc/view/banip/ripeview.htm:97
@@ -201,7 +205,7 @@ msgstr ""
 
 #: applications/luci-app-banip/luasrc/model/cbi/banip/overview_tab.lua:87
 msgid "Low Priority Service"
-msgstr "低優先權服務"
+msgstr "低優先順序服務"
 
 #: applications/luci-app-banip/luasrc/model/cbi/banip/overview_tab.lua:28
 msgid "Manual WAN Interface Selection"
@@ -209,7 +213,7 @@ msgstr "手動選擇 WAN 介面"
 
 #: applications/luci-app-banip/luasrc/model/cbi/banip/overview_tab.lua:100
 msgid "Max. Download Queue"
-msgstr ""
+msgstr "最大下載佇列"
 
 #: applications/luci-app-banip/luasrc/view/banip/ipsetview.htm:34
 #: applications/luci-app-banip/luasrc/view/banip/ripeview.htm:65
@@ -221,9 +225,9 @@ msgid ""
 "Options for further tweaking in case the defaults are not suitable for you."
 msgstr ""
 
-#: applications/luci-app-banip/luasrc/controller/banip.lua:17
+#: applications/luci-app-banip/luasrc/controller/banip.lua:21
 msgid "Overview"
-msgstr "概覽"
+msgstr "總覽"
 
 #: applications/luci-app-banip/luasrc/model/cbi/banip/blacklist_tab.lua:32
 #: applications/luci-app-banip/luasrc/model/cbi/banip/whitelist_tab.lua:32
@@ -238,14 +242,14 @@ msgstr ""
 msgid "Please edit this file directly in a terminal session."
 msgstr "請直接在終端機中編輯此檔案"
 
-#: applications/luci-app-banip/luasrc/controller/banip.lua:19
+#: applications/luci-app-banip/luasrc/controller/banip.lua:23
 msgid "RIPE-Lookup"
 msgstr ""
 
 #: applications/luci-app-banip/luasrc/view/banip/runtime.htm:18
 #: applications/luci-app-banip/luasrc/view/banip/runtime.htm:153
 msgid "Refresh"
-msgstr "更新"
+msgstr "重新整理"
 
 #: applications/luci-app-banip/luasrc/view/banip/runtime.htm:151
 msgid "Refresh IPSets"
@@ -426,13 +430,13 @@ msgstr ""
 
 #: applications/luci-app-banip/luasrc/model/cbi/banip/overview_tab.lua:138
 msgid "Trigger Delay"
-msgstr ""
+msgstr "觸發延遲"
 
 #: applications/luci-app-banip/luasrc/model/cbi/banip/overview_tab.lua:83
 msgid "Verbose Debug Logging"
-msgstr "囉嗦除錯紀錄"
+msgstr "詳細的偵錯記錄"
 
-#: applications/luci-app-banip/luasrc/controller/banip.lua:20
+#: applications/luci-app-banip/luasrc/controller/banip.lua:24
 msgid "View Logfile"
 msgstr "查看記錄檔"
 
@@ -463,7 +467,7 @@ msgstr ""
 msgid "Whois Information"
 msgstr "Whois 資訊"
 
-#: applications/luci-app-banip/luasrc/controller/banip.lua:16
+#: applications/luci-app-banip/luasrc/controller/banip.lua:17
 #: applications/luci-app-banip/luasrc/model/cbi/banip/overview_tab.lua:10
 msgid "banIP"
 msgstr ""

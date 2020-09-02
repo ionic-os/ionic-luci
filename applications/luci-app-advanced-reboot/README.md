@@ -1,5 +1,7 @@
 # Advanced Reboot Web UI (luci-app-advanced-reboot)
 
+[![HitCount](http://hits.dwyl.com/stangri/openwrt/luci-app-advanced-reboot.svg)](http://hits.dwyl.com/stangri/openwrt/luci-app-advanced-reboot)
+
 ## Description
 
 This package allows you to reboot to an alternative partition on the supported (dual-partition) routers and to power off (power down) your OpenWrt device.
@@ -26,7 +28,7 @@ If your device is not in the list above, however it is a [dual-firmware device](
 
 ## Screenshot (luci-app-advanced-reboot)
 
-![screenshot](https://raw.githubusercontent.com/stangri/openwrt_packages/master/screenshots/luci-app-advanced-reboot/screenshot02.png "screenshot")
+![screenshot](https://cdn.jsdelivr.net/gh/stangri/openwrt_packages@master/screenshots/luci-app-advanced-reboot/screenshot02.png "screenshot")
 
 ## How to install
 
@@ -37,7 +39,7 @@ opkg update
 opkg install luci-app-advanced-reboot
 ```
 
-If the ```luci-app-advanced-reboot``` package is not found in the official feed/repo for your version of OpenWrt/LEDE Project, you will need to [add a custom repo to your router](https://github.com/stangri/openwrt_packages/blob/master/README.md#on-your-router) first.
+If the ```luci-app-advanced-reboot``` package is not found in the official feed/repo for your version of OpenWrt/LEDE Project, you will need to add a custom repo to your router following instructions on [GitHub](https://github.com/stangri/openwrt_packages/blob/master/README.md#on-your-router)/[jsDelivr](https://cdn.jsdelivr.net/gh/stangri/openwrt_packages@master/README.md#on-your-router) first.
 
 ## Notes/Known Issues
 

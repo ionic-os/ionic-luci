@@ -11,6 +11,8 @@
 'require firewall';
 'require tools.widgets as widgets';
 
+var isReadonlyView = !L.hasViewPermission();
+
 function count_changes(section_id) {
 	var changes = ui.changes.changes, n = 0;
 
@@ -441,7 +443,8 @@ var CBIWifiFrequencyValue = form.Value.extend({
 				E('select', {
 					'class': 'mode',
 					'style': 'width:auto',
-					'change': L.bind(this.toggleWifiMode, this, elem)
+					'change': L.bind(this.toggleWifiMode, this, elem),
+					'disabled': (this.disabled != null) ? this.disabled : this.map.readonly
 				})
 			]),
 			E('label', { 'style': 'float:left; margin-right:3px' }, [
@@ -449,21 +452,24 @@ var CBIWifiFrequencyValue = form.Value.extend({
 				E('select', {
 					'class': 'band',
 					'style': 'width:auto',
-					'change': L.bind(this.toggleWifiBand, this, elem)
+					'change': L.bind(this.toggleWifiBand, this, elem),
+					'disabled': (this.disabled != null) ? this.disabled : this.map.readonly
 				})
 			]),
 			E('label', { 'style': 'float:left; margin-right:3px' }, [
 				_('Channel'), E('br'),
 				E('select', {
 					'class': 'channel',
-					'style': 'width:auto'
+					'style': 'width:auto',
+					'disabled': (this.disabled != null) ? this.disabled : this.map.readonly
 				})
 			]),
 			E('label', { 'style': 'float:left; margin-right:3px' }, [
 				_('Width'), E('br'),
 				E('select', {
 					'class': 'htmode',
-					'style': 'width:auto'
+					'style': 'width:auto',
+					'disabled': (this.disabled != null) ? this.disabled : this.map.readonly
 				})
 			]),
 			E('br', { 'style': 'clear:left' })
@@ -592,9 +598,9 @@ return view.extend({
 			if (stat.hasAttribute('restart'))
 				dom.content(stat, E('em', _('Device is restarting…')));
 
-			btns[0].disabled = busy;
-			btns[1].disabled = busy;
-			btns[2].disabled = busy;
+			btns[0].disabled = isReadonlyView || busy;
+			btns[1].disabled = (isReadonlyView && radioDev) || busy;
+			btns[2].disabled = isReadonlyView || busy;
 		}
 
 		var table = document.querySelector('#wifi_assoclist_table'),
@@ -654,7 +660,8 @@ return view.extend({
 						ev.currentTarget.blur();
 
 						net.disconnectClient(mac, true, 5, 60000);
-					}, this, bss.network, bss.mac)
+					}, this, bss.network, bss.mac),
+					'disabled': isReadonlyView || null
 				}, [ _('Disconnect') ]));
 			}
 			else {
@@ -886,7 +893,7 @@ return view.extend({
 					o.default = o.enabled;
 
 					o = ss.taboption('advanced', form.Value, 'distance', _('Distance Optimization'), _('Distance to farthest network member in meters.'));
-					o.datatype = 'range(0,114750)';
+					o.datatype = 'or(range(0,114750),"auto")';
 					o.placeholder = 'auto';
 
 					o = ss.taboption('advanced', form.Value, 'frag', _('Fragmentation Threshold'));
@@ -1188,6 +1195,9 @@ return view.extend({
 					var has_ap_eap192 = L.hasSystemFeature('hostapd', 'suiteb192'),
 					    has_sta_eap192 = L.hasSystemFeature('wpasupplicant', 'suiteb192');
 
+					// Probe WEP support
+					var has_ap_wep = L.hasSystemFeature('hostapd', 'wep'),
+					    has_sta_wep = L.hasSystemFeature('wpasupplicant', 'wep');
 
 					if (has_hostapd || has_supplicant) {
 						crypto_modes.push(['psk2',      'WPA2-PSK',                    35]);
@@ -1201,6 +1211,11 @@ return view.extend({
 					if (has_ap_sae || has_sta_sae) {
 						crypto_modes.push(['sae',       'WPA3-SAE',                     31]);
 						crypto_modes.push(['sae-mixed', 'WPA2-PSK/WPA3-SAE Mixed Mode', 30]);
+					}
+
+					if (has_ap_wep || has_sta_wep) {
+						crypto_modes.push(['wep-open',   _('WEP Open System'), 11]);
+						crypto_modes.push(['wep-shared', _('WEP Shared Key'),  10]);
 					}
 
 					if (has_ap_eap || has_sta_eap) {
@@ -1219,8 +1234,8 @@ return view.extend({
 
 					encr.crypto_support = {
 						'ap': {
-							'wep-open': true,
-							'wep-shared': true,
+							'wep-open': has_ap_wep || _('Requires hostapd with WEP support'),
+							'wep-shared': has_ap_wep || _('Requires hostapd with WEP support'),
 							'psk': has_hostapd || _('Requires hostapd'),
 							'psk2': has_hostapd || _('Requires hostapd'),
 							'psk-mixed': has_hostapd || _('Requires hostapd'),
@@ -1233,8 +1248,8 @@ return view.extend({
 							'owe': has_ap_owe || _('Requires hostapd with OWE support')
 						},
 						'sta': {
-							'wep-open': true,
-							'wep-shared': true,
+							'wep-open': has_sta_wep || _('Requires wpa-supplicant with WEP support'),
+							'wep-shared': has_sta_wep || _('Requires wpa-supplicant with WEP support'),
 							'psk': has_supplicant || _('Requires wpa-supplicant'),
 							'psk2': has_supplicant || _('Requires wpa-supplicant'),
 							'psk-mixed': has_supplicant || _('Requires wpa-supplicant'),
@@ -1288,10 +1303,10 @@ return view.extend({
 					crypto_modes.push(['psk2',     'WPA2-PSK',                    33]);
 					crypto_modes.push(['psk+psk2', 'WPA-PSK/WPA2-PSK Mixed Mode', 22]);
 					crypto_modes.push(['psk',      'WPA-PSK',                     21]);
+					crypto_modes.push(['wep-open',   _('WEP Open System'),        11]);
+					crypto_modes.push(['wep-shared', _('WEP Shared Key'),         10]);
 				}
 
-				crypto_modes.push(['wep-open',   _('WEP Open System'), 11]);
-				crypto_modes.push(['wep-shared', _('WEP Shared Key'),  10]);
 				crypto_modes.push(['none',       _('No Encryption'),   0]);
 
 				crypto_modes.sort(function(a, b) { return b[2] - a[2] });

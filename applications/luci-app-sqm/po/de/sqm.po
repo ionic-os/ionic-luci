@@ -1,46 +1,54 @@
 msgid ""
 msgstr ""
-"PO-Revision-Date: 2020-04-10 06:01+0000\n"
-"Last-Translator: ce4 <chregger@gmail.com>\n"
+"PO-Revision-Date: 2020-08-18 20:33+0000\n"
+"Last-Translator: Paul Spooren <mail@aparcar.org>\n"
 "Language-Team: German <https://hosted.weblate.org/projects/openwrt/"
 "luciapplicationssqm/de/>\n"
 "Language: de\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 4.0-dev\n"
+"X-Generator: Weblate 4.2-dev\n"
 
 #: applications/luci-app-sqm/luasrc/model/cbi/sqm.lua:206
 msgid ""
 "Advanced option string to pass to the egress queueing disciplines; no error "
 "checking, use very carefully."
 msgstr ""
+"Erweiterte Optionszeichenkette zur Übergabe an die ausgangsseitigen "
+"Warteschlangendisziplinen; keine Fehlerprüfung, sehr vorsichtig verwenden."
 
 #: applications/luci-app-sqm/luasrc/model/cbi/sqm.lua:202
 msgid ""
 "Advanced option string to pass to the ingress queueing disciplines; no error "
 "checking, use very carefully."
 msgstr ""
+"Erweiterte Optionszeichenkette zur Übergabe an die in die Warteschlange "
+"einsteigenden Disziplinen; keine Fehlerprüfung, sehr vorsichtig verwenden."
 
 #: applications/luci-app-sqm/luasrc/model/cbi/sqm.lua:33
 msgid "Basic Settings"
-msgstr ""
+msgstr "Grundlegende Einstellungen"
 
 #: applications/luci-app-sqm/luasrc/model/cbi/sqm.lua:88
 msgid ""
 "Create log file for this SQM instance under /var/run/sqm/${Interface_name}."
 "[start|stop]-sqm.log."
 msgstr ""
+"Logdatei für diese SQM-Instanz unter /var/run/sqm/"
+"${Interface_name}.[start|stop]-sqm.log erstellen."
 
 #: applications/luci-app-sqm/luasrc/model/cbi/sqm.lua:80
 msgid ""
 "Download speed (kbit/s) (ingress) set to 0 to selectively disable ingress "
 "shaping:"
 msgstr ""
+"Download-Geschwindigkeit (kbit/s) (Ingress) auf 0 setzen, um Ingress-Shaping "
+"selektiv zu deaktivieren:"
 
 #: applications/luci-app-sqm/luasrc/model/cbi/sqm.lua:40
 msgid "Enable this SQM instance."
-msgstr ""
+msgstr "Diese SQM-Instanz aktivieren"
 
 #: applications/luci-app-sqm/luasrc/model/cbi/sqm.lua:157
 msgid ""
@@ -51,6 +59,10 @@ msgstr ""
 msgid ""
 "Explicit congestion notification (ECN) status on outbound packets (egress)."
 msgstr ""
+
+#: applications/luci-app-sqm/root/usr/share/rpcd/acl.d/luci-app-sqm.json:3
+msgid "Grant UCI access for luci-app-sqm"
+msgstr "UCI-Zugriff für luci-app-sqm erlauben"
 
 #: applications/luci-app-sqm/luasrc/model/cbi/sqm.lua:183
 msgid "Hard limit on egress queues; leave empty for default."
@@ -138,6 +150,8 @@ msgid ""
 "Show and Use Advanced Configuration. Advanced options will only be used as "
 "long as this box is checked."
 msgstr ""
+"Erweiterte Konfiguration anzeigen und verwenden. Die erweiterten Optionen "
+"werden nur verwendet, wenn diese Option ausgewählt ist."
 
 #: applications/luci-app-sqm/luasrc/model/cbi/sqm.lua:171
 msgid ""
@@ -168,7 +182,7 @@ msgstr ""
 
 #: applications/luci-app-sqm/luasrc/model/cbi/sqm.lua:92
 msgid "Verbosity of SQM's output into the system log."
-msgstr ""
+msgstr "Festlegen, wie ausführlich SQM ins Systemlog schreiben soll"
 
 #: applications/luci-app-sqm/luasrc/model/cbi/sqm.lua:211
 msgid "Which link layer to account for:"

@@ -1,8 +1,15 @@
 msgid ""
 msgstr ""
+"PO-Revision-Date: 2020-06-07 15:48+0000\n"
+"Last-Translator: Artem <KovalevArtem.ru@gmail.com>\n"
+"Language-Team: Russian <https://hosted.weblate.org/projects/openwrt/"
+"luciapplicationssqm/ru/>\n"
 "Language: ru\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3; plural=n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
+"%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2;\n"
+"X-Generator: Weblate 4.1-dev\n"
 
 #: applications/luci-app-sqm/luasrc/model/cbi/sqm.lua:206
 msgid ""
@@ -18,7 +25,7 @@ msgstr ""
 
 #: applications/luci-app-sqm/luasrc/model/cbi/sqm.lua:33
 msgid "Basic Settings"
-msgstr ""
+msgstr "Основные настройки"
 
 #: applications/luci-app-sqm/luasrc/model/cbi/sqm.lua:88
 msgid ""
@@ -46,6 +53,10 @@ msgid ""
 "Explicit congestion notification (ECN) status on outbound packets (egress)."
 msgstr ""
 
+#: applications/luci-app-sqm/root/usr/share/rpcd/acl.d/luci-app-sqm.json:3
+msgid "Grant UCI access for luci-app-sqm"
+msgstr "Предоставить UCI доступ для luci-app-sqm"
+
 #: applications/luci-app-sqm/luasrc/model/cbi/sqm.lua:183
 msgid "Hard limit on egress queues; leave empty for default."
 msgstr ""
@@ -60,7 +71,7 @@ msgstr ""
 
 #: applications/luci-app-sqm/luasrc/model/cbi/sqm.lua:64
 msgid "Interface name"
-msgstr ""
+msgstr "Имя интерфейса"
 
 #: applications/luci-app-sqm/luasrc/model/cbi/sqm.lua:195
 msgid ""
@@ -186,4 +197,4 @@ msgstr ""
 #: applications/luci-app-sqm/luasrc/model/cbi/sqm.lua:212
 #: applications/luci-app-sqm/luasrc/model/cbi/sqm.lua:253
 msgid "default"
-msgstr ""
+msgstr "по умолчанию"

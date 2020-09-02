@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"PO-Revision-Date: 2020-04-01 19:11+0000\n"
-"Last-Translator: CE4 <chregger@gmail.com>\n"
+"PO-Revision-Date: 2020-07-11 21:29+0000\n"
+"Last-Translator: ssantos <ssantos@web.de>\n"
 "Language-Team: German <https://hosted.weblate.org/projects/openwrt/"
 "luciapplicationsfwknopd/de/>\n"
 "Language: de\n"
@@ -10,7 +10,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 4.0-dev\n"
+"X-Generator: Weblate 4.2-dev\n"
 
 #: applications/luci-app-fwknopd/luasrc/model/cbi/fwknopd.lua:48
 msgid ""
@@ -38,8 +38,8 @@ msgstr ""
 "Definiere ein Set an Ports und Protokollen (TCP oder UDP), das bei "
 "erfolgreicher Port-Knock-Sequenz geöffnet wird. Falls diese Option nicht "
 "gesetzt wird, wird fwknopd versuchen, alle Protokoll/Port-Anfragen aus dem "
-"SPA-Feld zu ermöglichen (außer es deckt sich mit \"RESTRICT_PORTS\""
-"-Einträgen). Mehrfacheinträge per Komma trennen."
+"SPA-Feld zu ermöglichen (außer es deckt sich mit \"RESTRICT_PORTS\"-"
+"Einträgen). Mehrfacheinträge per Komma trennen."
 
 #: applications/luci-app-fwknopd/luasrc/model/cbi/fwknopd.lua:36
 msgid ""
@@ -93,6 +93,10 @@ msgstr ""
 "externen Adresse verwendet werden (falls der Client hinter einem NAT sitzt) "
 "oder der die externe IP muss bekannt sein und beim Client per \"-a\"-"
 "Argument mitgegeben werden."
+
+#: applications/luci-app-fwknopd/root/usr/share/rpcd/acl.d/luci-app-fwknopd.json:3
+msgid "Grant UCI access for luci-app-fwknopd"
+msgstr "Gewähre UCI Zugriff auf luci-app-fwknopd"
 
 #: applications/luci-app-fwknopd/luasrc/model/cbi/fwknopd.lua:46
 msgid ""

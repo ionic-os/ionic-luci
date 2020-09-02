@@ -3,8 +3,8 @@ msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2009-06-10 03:41+0200\n"
-"PO-Revision-Date: 2020-03-01 16:12+0000\n"
-"Last-Translator: Franco Castillo <castillofrancodamian@gmail.com>\n"
+"PO-Revision-Date: 2020-08-07 03:34+0000\n"
+"Last-Translator: Álvaro Fernández Rojas <noltari@gmail.com>\n"
 "Language-Team: Spanish <https://hosted.weblate.org/projects/openwrt/"
 "luciapplicationsstatistics/es/>\n"
 "Language: es\n"
@@ -12,12 +12,12 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 4.0-dev\n"
+"X-Generator: Weblate 4.2-dev\n"
 
 #: applications/luci-app-statistics/htdocs/luci-static/resources/statistics/rrdtool/definitions/apcups.js:7
 #: applications/luci-app-statistics/root/usr/share/luci/statistics/plugins/apcups.json:2
 msgid "APC UPS"
-msgstr "APC UPS"
+msgstr "UPS APC"
 
 #: applications/luci-app-statistics/htdocs/luci-static/resources/view/statistics/plugins/apcups.js:6
 msgid "APCUPS Plugin Configuration"
@@ -128,7 +128,7 @@ msgstr "Rutas"
 
 #: applications/luci-app-statistics/htdocs/luci-static/resources/view/statistics/plugins/olsrd.js:35
 msgid "CollectTopology"
-msgstr "CollectTopology"
+msgstr "Topología"
 
 #: applications/luci-app-statistics/htdocs/luci-static/resources/view/statistics/collectd.js:46
 #: applications/luci-app-statistics/htdocs/luci-static/resources/view/statistics/collectd.js:49
@@ -168,6 +168,10 @@ msgstr "Conmutadores de contexto"
 #: applications/luci-app-statistics/htdocs/luci-static/resources/view/statistics/plugins/contextswitch.js:10
 msgid "Context switch monitoring enabled"
 msgstr "Monitoreo de cambio de contexto activado"
+
+#: applications/luci-app-statistics/htdocs/luci-static/resources/view/statistics/plugins/syslog.js:23
+msgid "Controls which notifications should be sent to syslog."
+msgstr "Controla qué notificaciones deben enviarse a syslog."
 
 #: applications/luci-app-statistics/htdocs/luci-static/resources/view/statistics/plugins/network.js:28
 msgid "Create statistics about the network plugin itself"
@@ -280,6 +284,7 @@ msgstr "Activar estadísticas"
 #: applications/luci-app-statistics/htdocs/luci-static/resources/view/statistics/plugins/processes.js:12
 #: applications/luci-app-statistics/htdocs/luci-static/resources/view/statistics/plugins/rrdtool.js:12
 #: applications/luci-app-statistics/htdocs/luci-static/resources/view/statistics/plugins/sensors.js:21
+#: applications/luci-app-statistics/htdocs/luci-static/resources/view/statistics/plugins/syslog.js:12
 #: applications/luci-app-statistics/htdocs/luci-static/resources/view/statistics/plugins/tcpconns.js:12
 #: applications/luci-app-statistics/htdocs/luci-static/resources/view/statistics/plugins/thermal.js:13
 #: applications/luci-app-statistics/htdocs/luci-static/resources/view/statistics/plugins/unixsock.js:13
@@ -364,6 +369,13 @@ msgstr "Vaciar caché tras"
 msgid "Forwarding between listen and server addresses"
 msgstr "Reenviar entre las direcciones de escucha y servidor"
 
+#: applications/luci-app-statistics/htdocs/luci-static/resources/view/statistics/plugins/df.js:92
+msgid ""
+"Free space, reserved space and used space is reported as relative values"
+msgstr ""
+"El espacio libre, el espacio reservado y el espacio utilizado se informan "
+"como valores relativos"
+
 #: applications/luci-app-statistics/htdocs/luci-static/resources/view/statistics/plugins/openvpn.js:21
 msgid "Gather compression statistics"
 msgstr "Recopilar estadísticas de compresión"
@@ -376,7 +388,11 @@ msgstr "Complementos generales"
 msgid "Generate a separate graph for each logged user"
 msgstr "Genera un gráfico separado para cada usuario registrado"
 
-#: applications/luci-app-statistics/root/usr/share/luci/menu.d/luci-app-statistics.json:14
+#: applications/luci-app-statistics/root/usr/share/rpcd/acl.d/luci-app-statistics.json:3
+msgid "Grant access to statistics resources"
+msgstr "Conceder acceso a recursos estadísticos"
+
+#: applications/luci-app-statistics/root/usr/share/luci/menu.d/luci-app-statistics.json:15
 msgid "Graphs"
 msgstr "Gráficos"
 
@@ -485,6 +501,10 @@ msgstr "Monitoreo de carga activado"
 msgid "Loading data…"
 msgstr "Cargando datos…"
 
+#: applications/luci-app-statistics/htdocs/luci-static/resources/view/statistics/plugins/syslog.js:14
+msgid "Log level"
+msgstr "Nivel de registro"
+
 #: applications/luci-app-statistics/htdocs/luci-static/resources/view/statistics/plugins/iptables.js:20
 msgid "Match IPv4 iptables rules"
 msgstr "Hacer coincidir las reglas de iptables de IPv4"
@@ -591,7 +611,7 @@ msgstr "Monitorizar puertos remotos"
 msgid "Monitoring %s and %s"
 msgstr "Monitoreando %s y %s"
 
-#: applications/luci-app-statistics/htdocs/luci-static/resources/view/statistics/plugins/df.js:103
+#: applications/luci-app-statistics/htdocs/luci-static/resources/view/statistics/plugins/df.js:106
 msgid "Monitoring %s, %s, %s"
 msgstr "Monitoreando %s, %s, %s"
 
@@ -645,7 +665,7 @@ msgstr[1] "Monitoreo de todos los sensores excepto %d"
 msgid "Monitoring all disks"
 msgstr "Monitorear todos los discos"
 
-#: applications/luci-app-statistics/htdocs/luci-static/resources/view/statistics/plugins/df.js:103
+#: applications/luci-app-statistics/htdocs/luci-static/resources/view/statistics/plugins/df.js:106
 msgid "Monitoring all except %s, %s, %s"
 msgstr "Monitoreo de todos excepto %s, %s, %s"
 
@@ -659,7 +679,7 @@ msgstr "Monitorear todas las interfaces"
 msgid "Monitoring all interrupts"
 msgstr "Monitorear todas las interrupciones"
 
-#: applications/luci-app-statistics/htdocs/luci-static/resources/view/statistics/plugins/df.js:101
+#: applications/luci-app-statistics/htdocs/luci-static/resources/view/statistics/plugins/df.js:104
 msgid "Monitoring all partitions"
 msgstr "Monitorear todas las particiones"
 
@@ -783,6 +803,10 @@ msgstr ""
 "archivos *.rrd, el directorio de almacenamiento y todos sus directorios "
 "principales deben ser legibles en todo el mundo."
 
+#: applications/luci-app-statistics/htdocs/luci-static/resources/view/statistics/plugins/syslog.js:23
+msgid "Notify level"
+msgstr "Nivel de notificación"
+
 #: applications/luci-app-statistics/htdocs/luci-static/resources/view/statistics/collectd.js:77
 msgid "Number of threads for data collection"
 msgstr "Número de hilos para recolección de datos"
@@ -904,6 +928,14 @@ msgstr "Filas por RRA"
 msgid "Rule monitoring enabled"
 msgstr "Monitoreo de reglas activado"
 
+#: applications/luci-app-statistics/htdocs/luci-static/resources/statistics/rrdtool/definitions/sqm.js:7
+msgid "SQM"
+msgstr "SQM"
+
+#: applications/luci-app-statistics/htdocs/luci-static/resources/statistics/rrdtool/definitions/sqmcake.js:7
+msgid "SQM-Cake"
+msgstr "Pastel SQM"
+
 #: applications/luci-app-statistics/htdocs/luci-static/resources/view/statistics/plugins/exec.js:24
 #: applications/luci-app-statistics/htdocs/luci-static/resources/view/statistics/plugins/exec.js:44
 msgid "Script"
@@ -948,7 +980,11 @@ msgid "Set the maximum size for datagrams sent over the network"
 msgstr ""
 "Establecer el tamaño máximo para datagramas enviados a través de la red"
 
-#: applications/luci-app-statistics/root/usr/share/luci/menu.d/luci-app-statistics.json:23
+#: applications/luci-app-statistics/htdocs/luci-static/resources/view/statistics/plugins/syslog.js:14
+msgid "Sets the syslog log-level."
+msgstr "Establece el nivel de registro de syslog."
+
+#: applications/luci-app-statistics/root/usr/share/luci/menu.d/luci-app-statistics.json:24
 msgid "Setup"
 msgstr "Configuración"
 
@@ -1040,6 +1076,18 @@ msgstr "Intervalos almacenados"
 msgid "Storing CSV data in %s"
 msgstr "Almacenar datos CSV en %s"
 
+#: applications/luci-app-statistics/root/usr/share/luci/statistics/plugins/syslog.json:2
+msgid "Syslog"
+msgstr "Syslog"
+
+#: applications/luci-app-statistics/htdocs/luci-static/resources/view/statistics/plugins/syslog.js:6
+msgid "Syslog Plugin Configuration"
+msgstr "Configuración del complemento de Syslog"
+
+#: applications/luci-app-statistics/htdocs/luci-static/resources/view/statistics/plugins/syslog.js:32
+msgid "Syslog enabled"
+msgstr "Syslog habilitado"
+
 #: applications/luci-app-statistics/htdocs/luci-static/resources/statistics/rrdtool/definitions/load.js:7
 #: applications/luci-app-statistics/root/usr/share/luci/statistics/plugins/load.json:2
 msgid "System Load"
@@ -1091,6 +1139,14 @@ msgid ""
 msgstr ""
 "El complemento OpenVPN recopila información sobre el estado actual de la "
 "conexión vpn."
+
+#: applications/luci-app-statistics/htdocs/luci-static/resources/view/statistics/plugins/syslog.js:7
+msgid ""
+"The SysLog plugin receives log messages from the daemon and dispatches them "
+"to syslog."
+msgstr ""
+"El complemento SysLog recibe mensajes de registro del demonio y los envía a "
+"syslog."
 
 #: applications/luci-app-statistics/htdocs/luci-static/resources/view/statistics/plugins/iptables.js:132
 msgid "The chain name must not contain spaces"
@@ -1475,13 +1531,13 @@ msgstr "Configuración de plugin de cUrl"
 msgid "none"
 msgstr "ninguno"
 
-#: applications/luci-app-statistics/htdocs/luci-static/resources/view/statistics/plugins/df.js:104
+#: applications/luci-app-statistics/htdocs/luci-static/resources/view/statistics/plugins/df.js:107
 msgid "one device"
 msgid_plural "%d devices"
 msgstr[0] "un dispositivo"
 msgstr[1] "%d dispositivos"
 
-#: applications/luci-app-statistics/htdocs/luci-static/resources/view/statistics/plugins/df.js:106
+#: applications/luci-app-statistics/htdocs/luci-static/resources/view/statistics/plugins/df.js:109
 msgid "one filesystem type"
 msgid_plural "%d filesystem types"
 msgstr[0] "un tipo de sistema de archivos"
@@ -1493,7 +1549,7 @@ msgid_plural "%d local ports"
 msgstr[0] "un puerto local"
 msgstr[1] "%d puertos locales"
 
-#: applications/luci-app-statistics/htdocs/luci-static/resources/view/statistics/plugins/df.js:105
+#: applications/luci-app-statistics/htdocs/luci-static/resources/view/statistics/plugins/df.js:108
 msgid "one mount"
 msgid_plural "%d mounts"
 msgstr[0] "un montaje"

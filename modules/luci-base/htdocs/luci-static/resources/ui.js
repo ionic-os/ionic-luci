@@ -2,6 +2,7 @@
 'require validation';
 'require baseclass';
 'require request';
+'require session';
 'require poll';
 'require dom';
 'require rpc';
@@ -59,6 +60,11 @@ var UIElement = baseclass.extend(/** @lends LuCI.ui.AbstractElement.prototype */
 	 * standard validation constraints are checked. The function should return
 	 * `true` to accept the given input value. Any other return value type is
 	 * converted to a string and treated as validation error message.
+	 *
+	 * @property {boolean} [disabled=false]
+	 * Specifies whether the widget should be rendered in disabled state
+	 * (`true`) or not (`false`). Disabled widgets cannot be interacted with
+	 * and are displayed in a slightly faded style.
 	 */
 
 	/**
@@ -93,6 +99,47 @@ var UIElement = baseclass.extend(/** @lends LuCI.ui.AbstractElement.prototype */
 	setValue: function(value) {
 		if (dom.matches(this.node, 'select') || dom.matches(this.node, 'input'))
 			this.node.value = value;
+	},
+
+	/**
+	 * Set the current placeholder value of the input widget.
+	 *
+	 * @instance
+	 * @memberof LuCI.ui.AbstractElement
+	 * @param {string|string[]|null} value
+	 * The placeholder to set for the input element. Only applicable to text
+	 * inputs, not to radio buttons, selects or similar.
+	 */
+	setPlaceholder: function(value) {
+		var node = this.node ? this.node.querySelector('input,textarea') : null;
+		if (node) {
+			switch (node.getAttribute('type') || 'text') {
+			case 'password':
+			case 'search':
+			case 'tel':
+			case 'text':
+			case 'url':
+				if (value != null && value != '')
+					node.setAttribute('placeholder', value);
+				else
+					node.removeAttribute('placeholder');
+			}
+		}
+	},
+
+	/**
+	 * Check whether the input value was altered by the user.
+	 *
+	 * @instance
+	 * @memberof LuCI.ui.AbstractElement
+	 * @returns {boolean}
+	 * Returns `true` if the input value has been altered by the user or
+	 * `false` if it is unchaged. Note that if the user modifies the initial
+	 * value and changes it back to the original state, it is still reported
+	 * as changed.
+	 */
+	isChanged: function() {
+		return (this.node ? this.node.getAttribute('data-changed') : null) == 'true';
 	},
 
 	/**
@@ -304,47 +351,45 @@ var UITextfield = UIElement.extend(/** @lends LuCI.ui.Textfield.prototype */ {
 	/** @override */
 	render: function() {
 		var frameEl = E('div', { 'id': this.options.id });
-
-		if (this.options.password) {
-			frameEl.classList.add('nowrap');
-			frameEl.appendChild(E('input', {
-				'type': 'password',
-				'style': 'position:absolute; left:-100000px',
-				'aria-hidden': true,
-				'tabindex': -1,
-				'name': this.options.name ? 'password.%s'.format(this.options.name) : null
-			}));
-		}
-
-		frameEl.appendChild(E('input', {
+		var inputEl = E('input', {
 			'id': this.options.id ? 'widget.' + this.options.id : null,
 			'name': this.options.name,
-			'type': this.options.password ? 'password' : 'text',
+			'type': 'text',
 			'class': this.options.password ? 'cbi-input-password' : 'cbi-input-text',
 			'readonly': this.options.readonly ? '' : null,
+			'disabled': this.options.disabled ? '' : null,
 			'maxlength': this.options.maxlength,
 			'placeholder': this.options.placeholder,
 			'value': this.value,
-		}));
+		});
 
-		if (this.options.password)
-			frameEl.appendChild(E('button', {
-				'class': 'cbi-button cbi-button-neutral',
-				'title': _('Reveal/hide password'),
-				'aria-label': _('Reveal/hide password'),
-				'click': function(ev) {
-					var e = this.previousElementSibling;
-					e.type = (e.type === 'password') ? 'text' : 'password';
-					ev.preventDefault();
-				}
-			}, '∗'));
+		if (this.options.password) {
+			frameEl.appendChild(E('div', { 'class': 'control-group' }, [
+				inputEl,
+				E('button', {
+					'class': 'cbi-button cbi-button-neutral',
+					'title': _('Reveal/hide password'),
+					'aria-label': _('Reveal/hide password'),
+					'click': function(ev) {
+						var e = this.previousElementSibling;
+						e.type = (e.type === 'password') ? 'text' : 'password';
+						ev.preventDefault();
+					}
+				}, '∗')
+			]));
+
+			window.requestAnimationFrame(function() { inputEl.type = 'password' });
+		}
+		else {
+			frameEl.appendChild(inputEl);
+		}
 
 		return this.bind(frameEl);
 	},
 
 	/** @private */
 	bind: function(frameEl) {
-		var inputEl = frameEl.childNodes[+!!this.options.password];
+		var inputEl = frameEl.querySelector('input');
 
 		this.node = frameEl;
 
@@ -358,13 +403,13 @@ var UITextfield = UIElement.extend(/** @lends LuCI.ui.Textfield.prototype */ {
 
 	/** @override */
 	getValue: function() {
-		var inputEl = this.node.childNodes[+!!this.options.password];
+		var inputEl = this.node.querySelector('input');
 		return inputEl.value;
 	},
 
 	/** @override */
 	setValue: function(value) {
-		var inputEl = this.node.childNodes[+!!this.options.password];
+		var inputEl = this.node.querySelector('input');
 		inputEl.value = value;
 	}
 });
@@ -437,7 +482,8 @@ var UITextarea = UIElement.extend(/** @lends LuCI.ui.Textarea.prototype */ {
 
 	/** @override */
 	render: function() {
-		var frameEl = E('div', { 'id': this.options.id }),
+		var style = !this.options.cols ? 'width:100%' : null,
+		    frameEl = E('div', { 'id': this.options.id, 'style': style }),
 		    value = (this.value != null) ? String(this.value) : '';
 
 		frameEl.appendChild(E('textarea', {
@@ -445,8 +491,9 @@ var UITextarea = UIElement.extend(/** @lends LuCI.ui.Textarea.prototype */ {
 			'name': this.options.name,
 			'class': 'cbi-input-textarea',
 			'readonly': this.options.readonly ? '' : null,
+			'disabled': this.options.disabled ? '' : null,
 			'placeholder': this.options.placeholder,
-			'style': !this.options.cols ? 'width:100%' : null,
+			'style': style,
 			'cols': this.options.cols,
 			'rows': this.options.rows,
 			'wrap': this.options.wrap ? '' : null
@@ -557,6 +604,7 @@ var UICheckbox = UIElement.extend(/** @lends LuCI.ui.Checkbox.prototype */ {
 			'type': 'checkbox',
 			'value': this.options.value_enabled,
 			'checked': (this.value == this.options.value_enabled) ? '' : null,
+			'disabled': this.options.disabled ? '' : null,
 			'data-widget-id': this.options.id ? 'widget.' + this.options.id : null
 		}));
 
@@ -702,13 +750,14 @@ var UISelect = UIElement.extend(/** @lends LuCI.ui.Select.prototype */ {
 		else if (Array.isArray(this.options.sort))
 			keys = this.options.sort;
 
-		if (this.options.widget == 'select') {
+		if (this.options.widget != 'radio' && this.options.widget != 'checkbox') {
 			frameEl.appendChild(E('select', {
 				'id': this.options.id ? 'widget.' + this.options.id : null,
 				'name': this.options.name,
 				'size': this.options.size,
 				'class': 'cbi-input-select',
-				'multiple': this.options.multiple ? '' : null
+				'multiple': this.options.multiple ? '' : null,
+				'disabled': this.options.disabled ? '' : null
 			}));
 
 			if (this.options.optional)
@@ -728,23 +777,30 @@ var UISelect = UIElement.extend(/** @lends LuCI.ui.Select.prototype */ {
 			}
 		}
 		else {
-			var brEl = (this.options.orientation === 'horizontal') ? document.createTextNode(' ') : E('br');
+			var brEl = (this.options.orientation === 'horizontal') ? document.createTextNode(' \xa0 ') : E('br');
 
 			for (var i = 0; i < keys.length; i++) {
-				frameEl.appendChild(E('label', {}, [
+				frameEl.appendChild(E('span', {
+					'class': 'cbi-%s'.format(this.options.multiple ? 'checkbox' : 'radio')
+				}, [
 					E('input', {
-						'id': this.options.id ? 'widget.' + this.options.id : null,
+						'id': this.options.id ? 'widget.%s.%d'.format(this.options.id, i) : null,
 						'name': this.options.id || this.options.name,
 						'type': this.options.multiple ? 'checkbox' : 'radio',
 						'class': this.options.multiple ? 'cbi-input-checkbox' : 'cbi-input-radio',
 						'value': keys[i],
-						'checked': (this.values.indexOf(keys[i]) > -1) ? '' : null
+						'checked': (this.values.indexOf(keys[i]) > -1) ? '' : null,
+						'disabled': this.options.disabled ? '' : null
 					}),
-					this.choices[keys[i]] || keys[i]
+					E('label', { 'for': this.options.id ? 'widget.%s.%d'.format(this.options.id, i) : null }),
+					E('span', {
+						'click': function(ev) {
+							ev.currentTarget.previousElementSibling.previousElementSibling.click();
+						}
+					}, [ this.choices[keys[i]] || keys[i] ])
 				]));
 
-				if (i + 1 == this.options.size)
-					frameEl.appendChild(brEl);
+				frameEl.appendChild(brEl.cloneNode());
 			}
 		}
 
@@ -755,7 +811,7 @@ var UISelect = UIElement.extend(/** @lends LuCI.ui.Select.prototype */ {
 	bind: function(frameEl) {
 		this.node = frameEl;
 
-		if (this.options.widget == 'select') {
+		if (this.options.widget != 'radio' && this.options.widget != 'checkbox') {
 			this.setUpdateEvents(frameEl.firstChild, 'change', 'click', 'blur');
 			this.setChangeEvents(frameEl.firstChild, 'change');
 		}
@@ -774,10 +830,10 @@ var UISelect = UIElement.extend(/** @lends LuCI.ui.Select.prototype */ {
 
 	/** @override */
 	getValue: function() {
-		if (this.options.widget == 'select')
+		if (this.options.widget != 'radio' && this.options.widget != 'checkbox')
 			return this.node.firstChild.value;
 
-		var radioEls = frameEl.querySelectorAll('input[type="radio"]');
+		var radioEls = this.node.querySelectorAll('input[type="radio"]');
 		for (var i = 0; i < radioEls.length; i++)
 			if (radioEls[i].checked)
 				return radioEls[i].value;
@@ -787,7 +843,7 @@ var UISelect = UIElement.extend(/** @lends LuCI.ui.Select.prototype */ {
 
 	/** @override */
 	setValue: function(value) {
-		if (this.options.widget == 'select') {
+		if (this.options.widget != 'radio' && this.options.widget != 'checkbox') {
 			if (value == null)
 				value = '';
 
@@ -963,6 +1019,7 @@ var UIDropdown = UIElement.extend(/** @lends LuCI.ui.Dropdown.prototype */ {
 			'class': 'cbi-dropdown',
 			'multiple': this.options.multiple ? '' : null,
 			'optional': this.options.optional ? '' : null,
+			'disabled': this.options.disabled ? '' : null
 		}, E('ul'));
 
 		var keys = Object.keys(this.choices);
@@ -1160,7 +1217,7 @@ var UIDropdown = UIElement.extend(/** @lends LuCI.ui.Dropdown.prototype */ {
 			ul.style.maxHeight = (vpHeight * 0.5) + 'px';
 			ul.style.WebkitOverflowScrolling = 'touch';
 
-			function getScrollParent(element) {
+			var getScrollParent = function(element) {
 				var parent = element,
 				    style = getComputedStyle(element),
 				    excludeStaticParent = (style.position === 'absolute');
@@ -2114,7 +2171,8 @@ var UIDynamicList = UIElement.extend(/** @lends LuCI.ui.DynamicList.prototype */
 	render: function() {
 		var dl = E('div', {
 			'id': this.options.id,
-			'class': 'cbi-dynlist'
+			'class': 'cbi-dynlist',
+			'disabled': this.options.disabled ? '' : null
 		}, E('div', { 'class': 'add-item' }));
 
 		if (this.choices) {
@@ -2130,7 +2188,8 @@ var UIDynamicList = UIElement.extend(/** @lends LuCI.ui.DynamicList.prototype */
 				'id': this.options.id ? 'widget.' + this.options.id : null,
 				'type': 'text',
 				'class': 'cbi-input-text',
-				'placeholder': this.options.placeholder
+				'placeholder': this.options.placeholder,
+				'disabled': this.options.disabled ? '' : null
 			});
 
 			dl.lastElementChild.appendChild(inputEl);
@@ -2239,6 +2298,9 @@ var UIDynamicList = UIElement.extend(/** @lends LuCI.ui.DynamicList.prototype */
 	handleClick: function(ev) {
 		var dl = ev.currentTarget,
 		    item = findParent(ev.target, '.item');
+
+		if (this.options.disabled)
+			return;
 
 		if (item) {
 			this.removeItem(dl, item);
@@ -2562,7 +2624,8 @@ var UIFileUpload = UIElement.extend(/** @lends LuCI.ui.FileUpload.prototype */ {
 			return this.bind(E('div', { 'id': this.options.id }, [
 				E('button', {
 					'class': 'btn',
-					'click': UI.prototype.createHandlerFn(this, 'handleFileBrowser')
+					'click': UI.prototype.createHandlerFn(this, 'handleFileBrowser'),
+					'disabled': this.options.disabled ? '' : null
 				}, label),
 				E('div', {
 					'class': 'cbi-filebrowser'
@@ -2589,21 +2652,24 @@ var UIFileUpload = UIElement.extend(/** @lends LuCI.ui.FileUpload.prototype */ {
 		switch (type) {
 		case 'symlink':
 			return E('img', {
-				'src': L.resource('cbi/link.gif'),
+				'src': L.resource('cbi/link.svg'),
+				'width': 16,
 				'title': _('Symbolic link'),
 				'class': 'middle'
 			});
 
 		case 'directory':
 			return E('img', {
-				'src': L.resource('cbi/folder.gif'),
+				'src': L.resource('cbi/folder.svg'),
+				'width': 16,
 				'title': _('Directory'),
 				'class': 'middle'
 			});
 
 		default:
 			return E('img', {
-				'src': L.resource('cbi/file.gif'),
+				'src': L.resource('cbi/file.svg'),
+				'width': 16,
 				'title': _('File'),
 				'class': 'middle'
 			});
@@ -2926,6 +2992,119 @@ var UIFileUpload = UIElement.extend(/** @lends LuCI.ui.FileUpload.prototype */ {
 	}
 });
 
+
+function scrubMenu(node) {
+	var hasSatisfiedChild = false;
+
+	if (L.isObject(node.children)) {
+		for (var k in node.children) {
+			var child = scrubMenu(node.children[k]);
+
+			if (child.title)
+				hasSatisfiedChild = hasSatisfiedChild || child.satisfied;
+		}
+	}
+
+	if (L.isObject(node.action) &&
+	    node.action.type == 'firstchild' &&
+	    hasSatisfiedChild == false)
+		node.satisfied = false;
+
+	return node;
+};
+
+/**
+ * Handle menu.
+ *
+ * @constructor menu
+ * @memberof LuCI.ui
+ *
+ * @classdesc
+ *
+ * Handles menus.
+ */
+var UIMenu = baseclass.singleton(/** @lends LuCI.ui.menu.prototype */ {
+	/**
+	 * @typedef {Object} MenuNode
+	 * @memberof LuCI.ui.menu
+
+	 * @property {string} name - The internal name of the node, as used in the URL
+	 * @property {number} order - The sort index of the menu node
+	 * @property {string} [title] - The title of the menu node, `null` if the node should be hidden
+	 * @property {satisified} boolean - Boolean indicating whether the menu enries dependencies are satisfied
+	 * @property {readonly} [boolean] - Boolean indicating whether the menu entries underlying ACLs are readonly
+	 * @property {LuCI.ui.menu.MenuNode[]} [children] - Array of child menu nodes.
+	 */
+
+	/**
+	 * Load and cache current menu tree.
+	 *
+	 * @returns {Promise<LuCI.ui.menu.MenuNode>}
+	 * Returns a promise resolving to the root element of the menu tree.
+	 */
+	load: function() {
+		if (this.menu == null)
+			this.menu = session.getLocalData('menu');
+
+		if (!L.isObject(this.menu)) {
+			this.menu = request.get(L.url('admin/menu')).then(L.bind(function(menu) {
+				this.menu = scrubMenu(menu.json());
+				session.setLocalData('menu', this.menu);
+
+				return this.menu;
+			}, this));
+		}
+
+		return Promise.resolve(this.menu);
+	},
+
+	/**
+	 * Flush the internal menu cache to force loading a new structure on the
+	 * next page load.
+	 */
+	flushCache: function() {
+		session.setLocalData('menu', null);
+	},
+
+	/**
+	 * @param {LuCI.ui.menu.MenuNode} [node]
+	 * The menu node to retrieve the children for. Defaults to the menu's
+	 * internal root node if omitted.
+	 *
+	 * @returns {LuCI.ui.menu.MenuNode[]}
+	 * Returns an array of child menu nodes.
+	 */
+	getChildren: function(node) {
+		var children = [];
+
+		if (node == null)
+			node = this.menu;
+
+		for (var k in node.children) {
+			if (!node.children.hasOwnProperty(k))
+				continue;
+
+			if (!node.children[k].satisfied)
+				continue;
+
+			if (!node.children[k].hasOwnProperty('title'))
+				continue;
+
+			children.push(Object.assign(node.children[k], { name: k }));
+		}
+
+		return children.sort(function(a, b) {
+			var wA = a.order || 1000,
+			    wB = b.order || 1000;
+
+			if (wA != wB)
+				return wA - wB;
+
+			return a.name > b.name;
+		});
+	}
+});
+
 /**
  * @class ui
  * @memberof LuCI
@@ -3003,6 +3182,7 @@ var UI = baseclass.extend(/** @lends LuCI.ui.prototype */ {
 		dom.append(dlg, children);
 
 		document.body.classList.add('modal-overlay-active');
+		modalDiv.scrollTop = 0;
 
 		return dlg;
 	},
@@ -3187,12 +3367,23 @@ var UI = baseclass.extend(/** @lends LuCI.ui.prototype */ {
 		}
 
 		var handlerFn = (typeof(handler) == 'function') ? handler : null,
-		    indicatorElem = indicatorDiv.querySelector('span[data-indicator="%s"]'.format(id)) ||
-			indicatorDiv.appendChild(E('span', {
+		    indicatorElem = indicatorDiv.querySelector('span[data-indicator="%s"]'.format(id));
+
+		if (indicatorElem == null) {
+			var beforeElem = null;
+
+			for (beforeElem = indicatorDiv.firstElementChild;
+			     beforeElem != null;
+			     beforeElem = beforeElem.nextElementSibling)
+				if (beforeElem.getAttribute('data-indicator') > id)
+					break;
+
+			indicatorElem = indicatorDiv.insertBefore(E('span', {
 				'data-indicator': id,
 				'data-clickable': handlerFn ? true : null,
 				'click': handlerFn
-			}, ['']));
+			}, ['']), beforeElem);
+		}
 
 		if (label == indicatorElem.firstChild.data && style == indicatorElem.getAttribute('data-style'))
 			return false;
@@ -3447,16 +3638,14 @@ var UI = baseclass.extend(/** @lends LuCI.ui.prototype */ {
 
 		/** @private */
 		getActiveTabState: function() {
-			var page = document.body.getAttribute('data-page');
+			var page = document.body.getAttribute('data-page'),
+			    state = session.getLocalData('tab');
 
-			try {
-				var val = JSON.parse(window.sessionStorage.getItem('tab'));
-				if (val.page === page && L.isObject(val.paths))
-					return val;
-			}
-			catch(e) {}
+			if (L.isObject(state) && state.page === page && L.isObject(state.paths))
+				return state;
 
-			window.sessionStorage.removeItem('tab');
+			session.setLocalData('tab', null);
+
 			return { page: page, paths: {} };
 		},
 
@@ -3468,17 +3657,12 @@ var UI = baseclass.extend(/** @lends LuCI.ui.prototype */ {
 
 		/** @private */
 		setActiveTabId: function(pane, tabIndex) {
-			var path = this.getPathForPane(pane);
+			var path = this.getPathForPane(pane),
+			    state = this.getActiveTabState();
 
-			try {
-				var state = this.getActiveTabState();
-				    state.paths[path] = tabIndex;
+			state.paths[path] = tabIndex;
 
-			    window.sessionStorage.setItem('tab', JSON.stringify(state));
-			}
-			catch (e) { return false; }
-
-			return true;
+			return session.setLocalData('tab', state);
 		},
 
 		/** @private */
@@ -3784,26 +3968,13 @@ var UI = baseclass.extend(/** @lends LuCI.ui.prototype */ {
 		 * The number of changes to indicate.
 		 */
 		setIndicator: function(n) {
-			var i = document.querySelector('.uci_change_indicator');
-			if (i == null) {
-				var poll = document.getElementById('xhr_poll_status');
-				i = poll.parentNode.insertBefore(E('a', {
-					'href': '#',
-					'class': 'uci_change_indicator label notice',
-					'click': L.bind(this.displayChanges, this)
-				}), poll);
-			}
-
 			if (n > 0) {
-				dom.content(i, [ _('Unsaved Changes'), ': ', n ]);
-				i.classList.add('flash');
-				i.style.display = '';
-				document.dispatchEvent(new CustomEvent('uci-new-changes'));
+				UI.prototype.showIndicator('uci-changes',
+					'%s: %d'.format(_('Unsaved Changes'), n),
+					L.bind(this.displayChanges, this));
 			}
 			else {
-				i.classList.remove('flash');
-				i.style.display = 'none';
-				document.dispatchEvent(new CustomEvent('uci-clear-changes'));
+				UI.prototype.hideIndicator('uci-changes');
 			}
 		},
 
@@ -4299,6 +4470,8 @@ var UI = baseclass.extend(/** @lends LuCI.ui.prototype */ {
 			L.error(err);
 		});
 	},
+
+	menu: UIMenu,
 
 	AbstractElement: UIElement,
 

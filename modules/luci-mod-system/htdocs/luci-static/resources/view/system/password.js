@@ -44,6 +44,8 @@ return view.extend({
 		var m, s, o;
 
 		m = new form.JSONMap(formData, _('Router Password'), _('Changes the administrator password for accessing the device'));
+		m.readonly = !L.hasViewPermission();
+
 		s = m.section(form.NamedSection, 'password', 'password');
 
 		o = s.option(form.Value, 'pw1', _('Password'));
@@ -55,7 +57,7 @@ return view.extend({
 		o.renderWidget = function(/* ... */) {
 			var node = form.Value.prototype.renderWidget.apply(this, arguments);
 
-			node.childNodes[1].addEventListener('keydown', function(ev) {
+			node.querySelector('input').addEventListener('keydown', function(ev) {
 				if (ev.keyCode == 13 && !ev.currentTarget.classList.contains('cbi-input-invalid'))
 					document.querySelector('.cbi-button-save').click();
 			});

@@ -6,6 +6,8 @@
 'require fs';
 'require ui';
 
+var isReadonlyView = !L.hasViewPermission();
+
 var callSystemValidateFirmwareImage = rpc.declare({
 	object: 'system',
 	method: 'validate_firmware_image',
@@ -353,6 +355,7 @@ return view.extend({
 
 		m = new form.JSONMap(mapdata, _('Flash operations'));
 		m.tabbed = true;
+		m.readonly = isReadonlyView;
 
 		s = m.section(form.NamedSection, 'actions', _('Actions'));
 
@@ -382,16 +385,21 @@ return view.extend({
 		o.onclick = L.bind(this.handleRestore, this);
 
 
-		if (procmtd.length) {
+		var mtdblocks = [];
+		procmtd.split(/\n/).forEach(function(ln) {
+			var match = ln.match(/^mtd(\d+): .+ "(.+?)"$/);
+			if (match)
+				mtdblocks.push(match[1], match[2]);
+		});
+
+		if (mtdblocks.length) {
 			o = s.option(form.SectionValue, 'actions', form.NamedSection, 'actions', 'actions', _('Save mtdblock contents'), _('Click "Save mtdblock" to download specified mtdblock file. (NOTE: THIS FEATURE IS FOR PROFESSIONALS! )'));
 			ss = o.subsection;
 
 			o = ss.option(form.ListValue, 'mtdselect', _('Choose mtdblock'));
-			procmtd.split(/\n/).forEach(function(ln) {
-				var match = ln.match(/^mtd(\d+): .+ "(.+?)"$/);
-				if (match)
-					o.value(match[1], match[2]);
-			});
+
+			for (var i = 0; i < mtdblocks.length; i += 2)
+				o.value(mtdblocks[i], mtdblocks[i+1]);
 
 			o = ss.option(form.Button, 'mtddownload', _('Download mtdblock'));
 			o.inputstyle = 'action important';
@@ -422,7 +430,8 @@ return view.extend({
 					node.appendChild(E('div', { 'class': 'cbi-page-actions' }, [
 						E('button', {
 							'class': 'cbi-button cbi-button-save',
-							'click': ui.createHandlerFn(view, 'handleBackupSave', this.map)
+							'click': ui.createHandlerFn(view, 'handleBackupSave', this.map),
+							'disabled': isReadonlyView || null
 						}, [ _('Save') ])
 					]));
 

@@ -1,4 +1,6 @@
 'use strict';
+'require view';
+'require poll';
 'require fs';
 'require ui';
 'require uci';
@@ -98,7 +100,7 @@ async function handleAction(ev) {
 		}
 	}
 
-	L.Poll.start();
+	poll.start();
 	fs.exec_direct('/etc/init.d/adblock', [ev])
 	var running = 1;
 	while (running === 1) {
@@ -109,10 +111,10 @@ async function handleAction(ev) {
 			}
 		})
 	}
-	L.Poll.stop();
+	poll.stop();
 }
 
-return L.view.extend({
+return view.extend({
 	load: function() {
 		return Promise.all([
 			L.resolveDefault(fs.exec_direct('/etc/init.d/adblock', ['list']), {}),
@@ -129,7 +131,7 @@ return L.view.extend({
 		/*
 			poll runtime information
 		*/
-		pollData: L.Poll.add(function() {
+		pollData: poll.add(function() {
 			return L.resolveDefault(fs.read_direct('/tmp/adb_runtime.json'), 'null').then(function(res) {
 				var info = JSON.parse(res);
 				var status = document.getElementById('status');
@@ -142,7 +144,7 @@ return L.view.extend({
 					} else {
 						if (status.classList.contains("spinning")) {
 							status.classList.remove("spinning");
-							L.Poll.stop();
+							poll.stop();
 						}
 					}
 					if (status.textContent.substr(0,6) === 'paused' && document.getElementById('btn_suspend')) {
@@ -266,7 +268,7 @@ return L.view.extend({
 		s.tab('general',  _('General Settings'));
 		s.tab('additional', _('Additional Settings'));
 		s.tab('adv_dns', _('Advanced DNS Settings'));
-		s.tab('adv_report', _('Advanced Report Settings'));
+		s.tab('adv_report', _('Advanced Report Settings'), _('Changes on this tab needs a full adblock service restart to take effect.<br /><p>&#xa0;</p>'));
 		s.tab('adv_email', _('Advanced E-Mail Settings'));
 		s.tab('sources', _('Blocklist Sources'), _('List of supported and fully pre-configured adblock sources, already active sources are pre-selected.<br /> \
 			<b><em>To avoid OOM errors, please do not select too many lists!</em></b><br /> \
@@ -299,7 +301,16 @@ return L.view.extend({
 		o = s.taboption('general', form.Flag, 'adb_safesearch', _('Enable SafeSearch'), _('Enforcing SafeSearch for google, bing, duckduckgo, yandex, youtube and pixabay.'));
 		o.rmempty = false;
 
-		o = s.taboption('general', form.Flag, 'adb_safesearchmod', _('SafeSearch Moderate'), _('Enable moderate SafeSearch filters for youtube.'));
+		o = s.taboption('general', form.MultiValue, 'adb_safesearchlist', _('Limit SafeSearch'), _('Limit SafeSearch to certain providers.'));
+		o.depends('adb_safesearch', '1');
+		o.value('google');
+		o.value('bing');
+		o.value('yandex');
+		o.value('youtube');
+		o.value('pixabay');
+		o.rmempty = true;
+
+		o = s.taboption('general', form.Flag, 'adb_safesearchmod', _('Relax SafeSearch'), _('Enable moderate SafeSearch filters for youtube.'));
 		o.depends('adb_safesearch', '1');
 		o.rmempty = true;
 

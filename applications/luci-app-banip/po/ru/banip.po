@@ -1,15 +1,15 @@
 msgid ""
 msgstr ""
-"PO-Revision-Date: 2020-03-29 11:15+0000\n"
+"PO-Revision-Date: 2020-06-23 07:41+0000\n"
 "Last-Translator: sergio <sergio+it@outerface.net>\n"
 "Language-Team: Russian <https://hosted.weblate.org/projects/openwrt/"
 "luciapplicationsbanip/ru/>\n"
 "Language: ru\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=3; plural=n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<="
-"4 && (n%100<10 || n%100>=20) ? 1 : 2;\n"
-"X-Generator: Weblate 4.0-dev\n"
+"Plural-Forms: nplurals=3; plural=n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
+"%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2;\n"
+"X-Generator: Weblate 4.2-dev\n"
 
 #: applications/luci-app-banip/luasrc/view/banip/ripeview.htm:89
 msgid "ASN Overview"
@@ -25,9 +25,9 @@ msgstr "ASN/страна"
 
 #: applications/luci-app-banip/luasrc/model/cbi/banip/overview_tab.lua:139
 msgid "Additional trigger delay in seconds before banIP processing begins."
-msgstr ""
+msgstr "Дополнительная задержка срабатывания правил banIP в секундах."
 
-#: applications/luci-app-banip/luasrc/controller/banip.lua:21
+#: applications/luci-app-banip/luasrc/controller/banip.lua:25
 msgid "Advanced"
 msgstr "Дополнительно"
 
@@ -88,15 +88,15 @@ msgstr "Утилита для скачивания"
 msgid "Download Utility, RT Monitor"
 msgstr ""
 
-#: applications/luci-app-banip/luasrc/controller/banip.lua:22
+#: applications/luci-app-banip/luasrc/controller/banip.lua:26
 msgid "Edit Blacklist"
 msgstr "Редактировать Черный список"
 
-#: applications/luci-app-banip/luasrc/controller/banip.lua:24
+#: applications/luci-app-banip/luasrc/controller/banip.lua:28
 msgid "Edit Configuration"
 msgstr "Редактировать config файл"
 
-#: applications/luci-app-banip/luasrc/controller/banip.lua:23
+#: applications/luci-app-banip/luasrc/controller/banip.lua:27
 msgid "Edit Whitelist"
 msgstr "Редактировать Белый список"
 
@@ -122,8 +122,8 @@ msgid ""
 "For further information <a href=\"%s\" target=\"_blank\">check the online "
 "documentation</a>"
 msgstr ""
-"<br />Для получения дополнительной информации <a href=\"%s\" target=\""
-"_blank\"> смотрите онлайн документацию</a>."
+"Для получения дополнительной информации <a href=\"%s\" target=\"_blank\"> "
+"смотрите онлайн документацию</a>"
 
 #: applications/luci-app-banip/luasrc/model/cbi/banip/overview_tab.lua:102
 msgid ""
@@ -136,6 +136,10 @@ msgstr ""
 #: applications/luci-app-banip/luasrc/view/banip/ripeview.htm:88
 msgid "Geo Location"
 msgstr ""
+
+#: applications/luci-app-banip/root/usr/share/rpcd/acl.d/luci-app-banip.json:3
+msgid "Grant UCI access for luci-app-banip"
+msgstr "Предоставить UCI доступ для luci-app-banip"
 
 #: applications/luci-app-banip/luasrc/view/banip/ripeview.htm:95
 msgid "IANA Information"
@@ -153,7 +157,7 @@ msgstr ""
 msgid "IPSet Sources"
 msgstr ""
 
-#: applications/luci-app-banip/luasrc/controller/banip.lua:18
+#: applications/luci-app-banip/luasrc/controller/banip.lua:22
 msgid "IPSet-Lookup"
 msgstr ""
 
@@ -229,7 +233,7 @@ msgstr ""
 "Возможные варианты детальной настройки, если значения по умолчанию не "
 "подходят для вас."
 
-#: applications/luci-app-banip/luasrc/controller/banip.lua:17
+#: applications/luci-app-banip/luasrc/controller/banip.lua:21
 msgid "Overview"
 msgstr "Обзор"
 
@@ -246,7 +250,7 @@ msgstr ""
 msgid "Please edit this file directly in a terminal session."
 msgstr "Редактируйте данный файл только в терминале."
 
-#: applications/luci-app-banip/luasrc/controller/banip.lua:19
+#: applications/luci-app-banip/luasrc/controller/banip.lua:23
 msgid "RIPE-Lookup"
 msgstr ""
 
@@ -444,9 +448,9 @@ msgstr "Задержка запуска"
 msgid "Verbose Debug Logging"
 msgstr "Подробный журнал отладки"
 
-#: applications/luci-app-banip/luasrc/controller/banip.lua:20
+#: applications/luci-app-banip/luasrc/controller/banip.lua:24
 msgid "View Logfile"
-msgstr ""
+msgstr "Показать системный журнал"
 
 #: applications/luci-app-banip/luasrc/model/cbi/banip/overview_tab.lua:156
 msgid "WAN Forward Chain IPv4"
@@ -475,7 +479,7 @@ msgstr ""
 msgid "Whois Information"
 msgstr ""
 
-#: applications/luci-app-banip/luasrc/controller/banip.lua:16
+#: applications/luci-app-banip/luasrc/controller/banip.lua:17
 #: applications/luci-app-banip/luasrc/model/cbi/banip/overview_tab.lua:10
 msgid "banIP"
 msgstr ""

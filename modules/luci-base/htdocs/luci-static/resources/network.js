@@ -356,7 +356,9 @@ function initNetworkState(refresh) {
 			L.resolveDefault(callLuciWirelessDevices(), {}),
 			L.resolveDefault(callLuciHostHints(), {}),
 			getProtocolHandlers(),
-			uci.load(['network', 'wireless', 'luci'])
+			L.resolveDefault(uci.load('network')),
+			L.resolveDefault(uci.load('wireless')),
+			L.resolveDefault(uci.load('luci'))
 		]).then(function(data) {
 			var netifd_ifaces = data[0],
 			    board_json    = data[1],
@@ -1220,6 +1222,22 @@ Network = baseclass.extend(/** @lends LuCI.network.prototype */ {
 				var netid = '%s.network%d'.format(uciWifiIfaces[i].device, networkCount[uciWifiIfaces[i].device]);
 
 				devices[netid] = this.instantiateDevice(netid);
+			}
+
+			/* find uci declared devices */
+			var uciDevices = uci.sections('network', 'device');
+
+			for (var i = 0; i < uciDevices.length; i++) {
+				var type = uciDevices[i].type,
+				    name = uciDevices[i].name;
+
+				if (!type || !name || devices.hasOwnProperty(name))
+					continue;
+
+				if (type == 'bridge')
+					_state.isBridge[name] = true;
+
+				devices[name] = this.instantiateDevice(name);
 			}
 
 			var rv = [];

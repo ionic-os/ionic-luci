@@ -13,13 +13,59 @@ local fs = require "nixio.fs"
 local nutil = require "nixio.util"
 local http = require "luci.http"
 local dispatcher = require "luci.dispatcher"
+
+function getPackageVersion()
+	local opkgFile = "/usr/lib/opkg/status"
+	local line
+	local flag = false
+	for line in io.lines(opkgFile) do
+		if flag then
+			return line:match('[%d%.$-]+') or ""
+		elseif line:find("Package: " .. packageName:gsub("%-", "%%%-")) then
+			flag = true
+		end
+	end
+	return ""
+end
+
+function getFileLines(file)
+	local f = io.open(file)
+	if f then
+		local t = f:read("*a")
+		local _,n = t:gsub("\n","")
+		f:close()
+		return n
+	else 
+		return "0"
+	end
+end
+
+function checkDnsmasq() return fs.access("/usr/sbin/dnsmasq") end
+function checkUnbound() return fs.access("/usr/sbin/unbound") end
+function checkIpset() 
+	if fs.access("/usr/sbin/ipset") and sys.call("/usr/sbin/ipset help hash:net >/dev/null 2>&1") == 0 then
+		return true
+	else
+		return false
+	end
+end
+
+function checkDnsmasqIpset()
+	if checkDnsmasq() then
+		local o = util.trim(util.exec("/usr/sbin/dnsmasq -v 2>/dev/null"))
+		if not o:match("no%-ipset") and o:match("ipset") and checkIpset() then
+			return true
+		else
+			return false
+		end
+	else
+		return false
+	end
+end
+
 local enabledFlag = uci:get(packageName, "config", "enabled")
 local command, outputFile, outputCache, outputGzip
 local targetDNS = uci:get(packageName, "config", "dns")
-local checkDnsmasq = sys.call("which dnsmasq >/dev/null 2>&1") == 0 and true
-local checkUnbound = sys.call("which unbound >/dev/null 2>&1") == 0 and true
-local checkDnsmasqIpset = sys.call("dnsmasq -v 2>/dev/null | grep -q 'no-ipset' || ! dnsmasq -v 2>/dev/null | grep -q -w 'ipset'") ~= 0
-   and sys.call("ipset help hash:net >/dev/null 2>&1") and true
 
 if not targetDNS or targetDNS == "" then
 	targetDNS = "dnsmasq.servers"
@@ -49,10 +95,20 @@ elseif targetDNS == "unbound.adb_list" then
 	outputGzip="/etc/" .. packageName .. ".unbound.gz"
 end
 
-local tmpfs, tmpfsMessage, tmpfsError, tmpfsStats
-local tmpfsVersion, tmpfsStatus = "", "Stopped"
+local packageVersion = getPackageVersion()
+local tmpfs, tmpfsMessage, tmpfsError, tmpfsStats, tmpfsStatus
+
+if packageVersion == "" then
+	tmpfsStatus = "statusNoInstall"
+else
+	tmpfsStatus = "statusStopped"
+end
+
 if fs.access("/var/run/" .. packageName .. ".json") then
-	tmpfs = jsonc.parse(util.trim(sys.exec("cat /var/run/" .. packageName .. ".json")))
+	local f = io.open("/var/run/" .. packageName .. ".json")
+	local s = f:read("*a")
+	f:close()
+	tmpfs = jsonc.parse(s)
 end
 
 if tmpfs and tmpfs['data'] then
@@ -68,16 +124,11 @@ if tmpfs and tmpfs['data'] then
 	if tmpfs['data']['stats'] and tmpfs['data']['stats'] ~= "" then
 		tmpfsStats = tmpfs['data']['stats']
 	end
-	if tmpfs['data']['version'] and tmpfs['data']['version'] ~= "" then
-		tmpfsVersion = packageName .. " " .. tmpfs['data']['version']
-	else 
-		tmpfsVersion = packageName
-	end
 end
 
 local statusTable = {}
 local errorTable = {}
-statusTable["statusNoInstall"] = packageName .. translate("is not installed or not found")
+statusTable["statusNoInstall"] = translatef("%s is not installed or not found", packageName)
 statusTable["statusStopped"] = translate("Stopped")
 statusTable["statusStarting"] = translate("Starting")
 statusTable["statusRestarting"] = translate("Restarting")
@@ -87,23 +138,24 @@ statusTable["statusError"] = translate("Error")
 statusTable["statusWarning"] = translate("Warning")
 statusTable["statusFail"] = translate("Fail")
 statusTable["statusSuccess"] = translate("Success")
-errorTable["errorOutputFileCreate"] = translate("failed to create") .. " '" .. outputFile .. "' " .. translate("file")
+errorTable["errorOutputFileCreate"] = translatef("failed to create '%s' file", outputFile)
 errorTable["errorFailDNSReload"] = translate("failed to restart/reload DNS resolver")
 errorTable["errorSharedMemory"] = translate("failed to access shared memory")
 errorTable["errorSorting"] = translate("failed to sort data file")
 errorTable["errorOptimization"] = translate("failed to optimize data file")
-errorTable["errorWhitelistProcessing"] = translate("failed to process whitelist")
+errorTable["errorAllowListProcessing"] = translate("failed to process allow-list")
 errorTable["errorDataFileFormatting"] = translate("failed to format data file")
-errorTable["errorMovingDataFile"] = translate("failed to move temporary data file to") .. " '" .. outputFile .. "'"
+errorTable["errorMovingDataFile"] = translatef("failed to move temporary data file to '%s'", outputFile)
 errorTable["errorCreatingCompressedCache"] = translate("failed to create compressed cache")
 errorTable["errorRemovingTempFiles"] = translate("failed to remove temporary files")
 errorTable["errorRestoreCompressedCache"] = translate("failed to unpack compressed cache")
-errorTable["errorRestoreCache"] = translate("failed to move") .. " '" .. outputCache .. "' " .. translate("to") .. " '" .. outputFile .. "'"
-errorTable["errorOhSnap"] = translate("failed to create blocklist or restart DNS resolver")
-errorTable["errorStopping"] = translate("failed to stop") .. " " .. packageName
+errorTable["errorRestoreCache"] = translatef("failed to move '%s' to '%s'", outputCache, outputFile)
+errorTable["errorOhSnap"] = translate("failed to create block-list or restart DNS resolver")
+errorTable["errorStopping"] = translatef("failed to stop %s", packageName)
 errorTable["errorDNSReload"] = translate("failed to reload/restart DNS resolver")
 errorTable["errorDownloadingList"] = translate("failed to download")
 errorTable["errorParsingList"] = translate("failed to parse")
+errorTable["errorNoSSLSupport"] = translate("no HTTPS/SSL support on device")
 
 m = Map("simple-adblock", translate("Simple AdBlock Settings"))
 m.apply_on_parse = true
@@ -111,7 +163,7 @@ m.on_after_apply = function(self)
 	sys.call("/etc/init.d/simple-adblock restart")
 end
 
-h = m:section(NamedSection, "config", "simple-adblock", translate("Service Status") .. " [" .. tmpfsVersion .. "]")
+h = m:section(NamedSection, "config", "simple-adblock", translatef("Service Status [%s %s]", packageName, packageVersion))
 
 if tmpfsStatus == "statusStarting" or
 	 tmpfsStatus == "statusRestarting" or
@@ -133,20 +185,17 @@ else
 		if fs.access(outputCache) then
 			sm = h:option(DummyValue, "_dummy", translate("Info"))
 			sm.template = "simple-adblock/status"
-			sm.value = translate("Cache file containing") .. " " .. util.trim(sys.exec("wc -l < " .. outputCache)) .. " " .. translate("domains found") .. "."
+			sm.value = translatef("Cache file containing %s domains found.", getFileLines(outputCache))
 		elseif fs.access(outputGzip) then
 			sm = h:option(DummyValue, "_dummy", translate("Info"))
 			sm.template = "simple-adblock/status"
-			sm.value = translate("Compressed cache file found") .. "."
+			sm.value = translate("Compressed cache file found.")
 		end
 	else
 		ss = h:option(DummyValue, "_dummy", translate("Service Status"))
 		ss.template = "simple-adblock/status"
 		if tmpfsStatus == "statusSuccess" then
-			ss.value = tmpfsVersion .. " " .. translate("is blocking") .. 
-				" " .. util.trim(sys.exec("wc -l < " .. outputFile)) .. 
-				" " .. translate("domains") .. " (" .. translate("with") .. 
-				" " .. targetDNS .. ")."
+			ss.value = translatef("%s is blocking %s domains (with %s).", packageVersion, getFileLines(outputFile), targetDNS)
 		else
 			ss.value = statusTable[tmpfsStatus]
 		end
@@ -161,16 +210,16 @@ else
 			es.value = ""
 			local err, e, url
 			for err in tmpfsError:gmatch("[%p%w]+") do
-				if err:match("=") then
-					e,url = err:match("(.+)=(.+)")
-					es.value = es.value .. translate("Error") .. ": " .. errorTable[e] .. " " .. url .. ".\n"
+				if err:match("|") then
+					e,url = err:match("(.+)|(.+)")
+					es.value = translatef("%s Error: %s %s", es.value, errorTable[e], url) .. ".\n"
 				else
-					es.value = es.value .. translate("Error") .. ": " .. errorTable[err] .. ".\n"
+					es.value = translatef("%s Error: %s", es.value, errorTable[err]) .. ".\n"
 				end
 			end
 		end
 	end
-	if tmpfsVersion ~= "" then
+	if packageVersion ~= "" then
 		buttons = h:option(DummyValue, "_dummy")
 		buttons.template = packageName .. "/buttons"
 	end
@@ -197,9 +246,8 @@ if fs.access(sysfs_path) then
 	leds = nutil.consume((fs.dir(sysfs_path)))
 end
 if #leds ~= 0 then
-	o4 = s:taboption("basic", Value, "led", translate("LED to indicate status"), translate("Pick the LED not already used in")
-		.. [[ <a href="]] .. dispatcher.build_url("admin", "system", "leds") .. [[">]]
-		.. translate("System LED Configuration") .. [[</a>]] .. ".")
+	o4 = s:taboption("basic", Value, "led", translate("LED to indicate status"),
+		translatef("Pick the LED not already used in %sSystem LED Configuration%s.", "<a href=\"" .. dispatcher.build_url("admin", "system", "leds") .. "\">", "</a>"))
 	o4.rmempty = false
 	o4:value("", translate("none"))
 	for k, v in ipairs(leds) do
@@ -209,32 +257,30 @@ end
 
 s:tab("advanced", translate("Advanced Configuration"))
 
-local dns_descr = translate("Pick the DNS resolution option to create the adblock list for, see the") .. " "
-		.. [[<a href="]] .. readmeURL .. [[#dns-resolution-option" target="_blank">]]
-		.. translate("README") .. [[</a>]] .. " " .. translate("for details.")
+local dns_descr = translatef("Pick the DNS resolution option to create the adblock list for, see the <a href=\"%s#dns-resolution-option\" target=\"_blank\">README</a> for details.", readmeURL)
 
-if not checkDnsmasq then
-	dns_descr = dns_descr .. "<br />" .. translate("Please note that") .. " <i>dnsmasq.addnhosts</i> " .. translate("is not supported on this system.")
-	dns_descr = dns_descr .. "<br />" .. translate("Please note that") .. " <i>dnsmasq.conf</i> " .. translate("is not supported on this system.")
-	dns_descr = dns_descr .. "<br />" .. translate("Please note that") .. " <i>dnsmasq.ipset</i> " .. translate("is not supported on this system.")
-	dns_descr = dns_descr .. "<br />" .. translate("Please note that") .. " <i>dnsmasq.servers</i> " .. translate("is not supported on this system.")
-elseif not checkDnsmasqIpset then 
-	dns_descr = dns_descr .. "<br />" .. translate("Please note that") .. " <i>dnsmasq.ipset</i> " .. translate("is not supported on this system.")
+if not checkDnsmasq() then
+	dns_descr = dns_descr .. "<br />" .. translatef("Please note that %s is not supported on this system.", "<i>dnsmasq.addnhosts</i>")
+	dns_descr = dns_descr .. "<br />" .. translatef("Please note that %s is not supported on this system.", "<i>dnsmasq.conf</i>")
+	dns_descr = dns_descr .. "<br />" .. translatef("Please note that %s is not supported on this system.", "<i>dnsmasq.ipset</i>")
+	dns_descr = dns_descr .. "<br />" .. translatef("Please note that %s is not supported on this system.", "<i>dnsmasq.servers</i>")
+elseif not checkDnsmasqIpset() then 
+	dns_descr = dns_descr .. "<br />" .. translatef("Please note that %s is not supported on this system.", "<i>dnsmasq.ipset</i>")
 end
-if not checkUnbound then 
-	dns_descr = dns_descr .. "<br />" .. translate("Please note that") .. " <i>unbound.adb_list</i> " .. translate("is not supported on this system.")
+if not checkUnbound() then 
+	dns_descr = dns_descr .. "<br />" .. translatef("Please note that %s is not supported on this system.", "<i>unbound.adb_list</i>")
 end
 
 dns = s:taboption("advanced", ListValue, "dns", translate("DNS Service"), dns_descr)
-if checkDnsmasq then
+if checkDnsmasq() then
 	dns:value("dnsmasq.addnhosts", translate("DNSMASQ Additional Hosts"))
 	dns:value("dnsmasq.conf", translate("DNSMASQ Config"))
-	if checkDnsmasqIpset then
+	if checkDnsmasqIpset() then
 		dns:value("dnsmasq.ipset", translate("DNSMASQ IP Set"))
 	end
 	dns:value("dnsmasq.servers", translate("DNSMASQ Servers File"))
 end
-if checkUnbound then
+if checkUnbound() then
 	dns:value("unbound.adb_list", translate("Unbound AdBlock List"))
 end
 dns.default = "dnsmasq.servers"
@@ -274,29 +320,29 @@ o11:value("1", translate("Enable Debugging"))
 o11.default = "0"
 
 
-s2 = m:section(NamedSection, "config", "simple-adblock", translate("Whitelist and Blocklist Management"))
--- Whitelisted Domains
-d1 = s2:option(DynamicList, "whitelist_domain", translate("Whitelisted Domains"), translate("Individual domains to be whitelisted."))
+s2 = m:section(NamedSection, "config", "simple-adblock", translate("Allowed and Blocked Lists Management"))
+-- Allowed Domains
+d1 = s2:option(DynamicList, "allowed_domain", translate("Allowed Domains"), translate("Individual domains to be allowed."))
 d1.addremove = false
 d1.optional = false
 
--- Blacklisted Domains
-d3 = s2:option(DynamicList, "blacklist_domain", translate("Blacklisted Domains"), translate("Individual domains to be blacklisted."))
-d3.addremove = false
-d3.optional = false
-
--- Whitelisted Domains URLs
-d2 = s2:option(DynamicList, "whitelist_domains_url", translate("Whitelisted Domain URLs"), translate("URLs to lists of domains to be whitelisted."))
+-- Allowed Domains URLs
+d2 = s2:option(DynamicList, "allowed_domains_url", translate("Allowed Domain URLs"), translate("URLs to lists of domains to be allowed."))
 d2.addremove = false
 d2.optional = false
 
--- Blacklisted Domains URLs
-d4 = s2:option(DynamicList, "blacklist_domains_url", translate("Blacklisted Domain URLs"), translate("URLs to lists of domains to be blacklisted."))
+-- Blocked Domains
+d3 = s2:option(DynamicList, "blocked_domain", translate("Blocked Domains"), translate("Individual domains to be blocked."))
+d3.addremove = false
+d3.optional = false
+
+-- Blocked Domains URLs
+d4 = s2:option(DynamicList, "blocked_domains_url", translate("Blocked Domain URLs"), translate("URLs to lists of domains to be blocked."))
 d4.addremove = false
 d4.optional = false
 
--- Blacklisted Hosts URLs
-d5 = s2:option(DynamicList, "blacklist_hosts_url", translate("Blacklisted Hosts URLs"), translate("URLs to lists of hosts to be blacklisted."))
+-- Blocked Hosts URLs
+d5 = s2:option(DynamicList, "blocked_hosts_url", translate("Blocked Hosts URLs"), translate("URLs to lists of hosts to be blocked."))
 d5.addremove = false
 d5.optional = false
 

@@ -12,6 +12,8 @@
 (function(window, document, undefined) {
 	'use strict';
 
+	var env = {};
+
 	/* Object.assign polyfill for IE */
 	if (typeof Object.assign !== 'function') {
 		Object.defineProperty(Object, 'assign', {
@@ -1069,7 +1071,7 @@
 		 */
 		add: function(fn, interval) {
 			if (interval == null || interval <= 0)
-				interval = window.L ? window.L.env.pollinterval : null;
+				interval = env.pollinterval || null;
 
 			if (isNaN(interval) || typeof(fn) != 'function')
 				throw new TypeError('Invalid argument to LuCI.poll.add()');
@@ -1211,7 +1213,7 @@
 	 * To import the class in views, use `'require dom'`, to import it in
 	 * external JavaScript, use `L.require("dom").then(...)`.
 	 */
-	var DOM = Class.singleton(/* @lends LuCI.dom.prototype */ {
+	var DOM = Class.singleton(/** @lends LuCI.dom.prototype */ {
 		__name__: 'LuCI.dom',
 
 		/**
@@ -1716,7 +1718,7 @@
 		 */
 		bindClassInstance: function(node, inst) {
 			if (!(inst instanceof Class))
-				L.error('TypeError', 'Argument must be a class instance');
+				LuCI.prototype.error('TypeError', 'Argument must be a class instance');
 
 			return this.data(node, '_class', inst);
 		},
@@ -1824,6 +1826,111 @@
 	});
 
 	/**
+	 * @class session
+	 * @memberof LuCI
+	 * @hideconstructor
+	 * @classdesc
+	 *
+	 * The `session` class provides various session related functionality.
+	 */
+	var Session = Class.singleton(/** @lends LuCI.session.prototype */ {
+		__name__: 'LuCI.session',
+
+		/**
+		 * Retrieve the current session ID.
+		 *
+		 * @returns {string}
+		 * Returns the current session ID.
+		 */
+		getID: function() {
+			return env.sessionid || '00000000000000000000000000000000';
+		},
+
+		/**
+		 * Retrieve the current session token.
+		 *
+		 * @returns {string|null}
+		 * Returns the current session token or `null` if not logged in.
+		 */
+		getToken: function() {
+			return env.token || null;
+		},
+
+		/**
+		 * Retrieve data from the local session storage.
+		 *
+		 * @param {string} [key]
+		 * The key to retrieve from the session data store. If omitted, all
+		 * session data will be returned.
+		 *
+		 * @returns {*}
+		 * Returns the stored session data or `null` if the given key wasn't
+		 * found.
+		 */
+		getLocalData: function(key) {
+			try {
+				var sid = this.getID(),
+				    item = 'luci-session-store',
+				    data = JSON.parse(window.sessionStorage.getItem(item));
+
+				if (!LuCI.prototype.isObject(data) || !data.hasOwnProperty(sid)) {
+					data = {};
+					data[sid] = {};
+				}
+
+				if (key != null)
+					return data[sid].hasOwnProperty(key) ? data[sid][key] : null;
+
+				return data[sid];
+			}
+			catch (e) {
+				return (key != null) ? null : {};
+			}
+		},
+
+		/**
+		 * Set data in the local session storage.
+		 *
+		 * @param {string} key
+		 * The key to set in the session data store.
+		 *
+		 * @param {*} value
+		 * The value to store. It will be internally converted to JSON before
+		 * being put in the session store.
+		 *
+		 * @returns {boolean}
+		 * Returns `true` if the data could be stored or `false` on error.
+		 */
+		setLocalData: function(key, value) {
+			if (key == null)
+				return false;
+
+			try {
+				var sid = this.getID(),
+				    item = 'luci-session-store',
+				    data = JSON.parse(window.sessionStorage.getItem(item));
+
+				if (!LuCI.prototype.isObject(data) || !data.hasOwnProperty(sid)) {
+					data = {};
+					data[sid] = {};
+				}
+
+				if (value != null)
+					data[sid][key] = value;
+				else
+					delete data[sid][key];
+
+				window.sessionStorage.setItem(item, JSON.stringify(data));
+
+				return true;
+			}
+			catch (e) {
+				return false;
+			}
+		}
+	});
+
+	/**
 	 * @class view
 	 * @memberof LuCI
 	 * @hideconstructor
@@ -1832,7 +1939,7 @@
 	 * The `view` class forms the basis of views and provides a standard
 	 * set of methods to inherit from.
 	 */
-	var View = Class.extend(/* @lends LuCI.view.prototype */ {
+	var View = Class.extend(/** @lends LuCI.view.prototype */ {
 		__name__: 'LuCI.view',
 
 		__init__: function() {
@@ -1841,13 +1948,13 @@
 			DOM.content(vp, E('div', { 'class': 'spinning' }, _('Loading view…')));
 
 			return Promise.resolve(this.load())
-				.then(L.bind(this.render, this))
-				.then(L.bind(function(nodes) {
+				.then(LuCI.prototype.bind(this.render, this))
+				.then(LuCI.prototype.bind(function(nodes) {
 					var vp = document.getElementById('view');
 
 					DOM.content(vp, nodes);
 					DOM.append(vp, this.addFooter());
-				}, this)).catch(L.error);
+				}, this)).catch(LuCI.prototype.error);
 		},
 
 		/**
@@ -1981,7 +2088,7 @@
 		 */
 		handleSaveApply: function(ev, mode) {
 			return this.handleSave(ev).then(function() {
-				L.ui.changes.apply(mode == '0');
+				classes.ui.changes.apply(mode == '0');
 			});
 		},
 
@@ -2051,9 +2158,25 @@
 		 * methods are overwritten with `null`.
 		 */
 		addFooter: function() {
-			var footer = E([]);
+			var footer = E([]),
+			    vp = document.getElementById('view'),
+			    hasmap = false,
+			    readonly = true;
 
-			var saveApplyBtn = this.handleSaveApply ? new L.ui.ComboButton('0', {
+			vp.querySelectorAll('.cbi-map').forEach(function(map) {
+				var m = DOM.findClassInstance(map);
+				if (m) {
+					hasmap = true;
+
+					if (!m.readonly)
+						readonly = false;
+				}
+			});
+
+			if (!hasmap)
+				readonly = !LuCI.prototype.hasViewPermission();
+
+			var saveApplyBtn = this.handleSaveApply ? new classes.ui.ComboButton('0', {
 				0: [ _('Save & Apply') ],
 				1: [ _('Apply unchecked') ]
 			}, {
@@ -2061,7 +2184,8 @@
 					0: 'btn cbi-button cbi-button-apply important',
 					1: 'btn cbi-button cbi-button-negative important'
 				},
-				click: L.ui.createHandlerFn(this, 'handleSaveApply')
+				click: classes.ui.createHandlerFn(this, 'handleSaveApply'),
+				disabled: readonly || null
 			}).render() : E([]);
 
 			if (this.handleSaveApply || this.handleSave || this.handleReset) {
@@ -2069,11 +2193,13 @@
 					saveApplyBtn, ' ',
 					this.handleSave ? E('button', {
 						'class': 'cbi-button cbi-button-save',
-						'click': L.ui.createHandlerFn(this, 'handleSave')
+						'click': classes.ui.createHandlerFn(this, 'handleSave'),
+						'disabled': readonly || null
 					}, [ _('Save') ]) : '', ' ',
 					this.handleReset ? E('button', {
 						'class': 'cbi-button cbi-button-reset',
-						'click': L.ui.createHandlerFn(this, 'handleReset')
+						'click': classes.ui.createHandlerFn(this, 'handleReset'),
+						'disabled': readonly || null
 					}, [ _('Reset') ]) : ''
 				]));
 			}
@@ -2087,7 +2213,8 @@
 	    domParser = null,
 	    originalCBIInit = null,
 	    rpcBaseURL = null,
-	    sysFeatures = null;
+	    sysFeatures = null,
+	    preloadClasses = null;
 
 	/* "preload" builtin classes to make the available via require */
 	var classes = {
@@ -2095,41 +2222,30 @@
 		dom: DOM,
 		poll: Poll,
 		request: Request,
+		session: Session,
 		view: View
 	};
 
 	var LuCI = Class.extend(/** @lends LuCI.prototype */ {
 		__name__: 'LuCI',
-		__init__: function(env) {
+		__init__: function(setenv) {
 
 			document.querySelectorAll('script[src*="/luci.js"]').forEach(function(s) {
-				if (env.base_url == null || env.base_url == '') {
+				if (setenv.base_url == null || setenv.base_url == '') {
 					var m = (s.getAttribute('src') || '').match(/^(.*)\/luci\.js(?:\?v=([^?]+))?$/);
 					if (m) {
-						env.base_url = m[1];
-						env.resource_version = m[2];
+						setenv.base_url = m[1];
+						setenv.resource_version = m[2];
 					}
 				}
 			});
 
-			if (env.base_url == null)
+			if (setenv.base_url == null)
 				this.error('InternalError', 'Cannot find url of luci.js');
 
-			env.cgi_base = env.scriptname.replace(/\/[^\/]+$/, '');
+			setenv.cgi_base = setenv.scriptname.replace(/\/[^\/]+$/, '');
 
-			Object.assign(this.env, env);
-
-			document.addEventListener('poll-start', function(ev) {
-				document.querySelectorAll('[id^="xhr_poll_status"]').forEach(function(e) {
-					e.style.display = (e.id == 'xhr_poll_status_off') ? 'none' : '';
-				});
-			});
-
-			document.addEventListener('poll-stop', function(ev) {
-				document.querySelectorAll('[id^="xhr_poll_status"]').forEach(function(e) {
-					e.style.display = (e.id == 'xhr_poll_status_on') ? 'none' : '';
-				});
-			});
+			Object.assign(env, setenv);
 
 			var domReady = new Promise(function(resolveFn, rejectFn) {
 				document.addEventListener('DOMContentLoaded', resolveFn);
@@ -2239,12 +2355,13 @@
 		 */
 		error: function(type, fmt /*, ...*/) {
 			try {
-				L.raise.apply(L, Array.prototype.slice.call(arguments));
+				LuCI.prototype.raise.apply(LuCI.prototype,
+					Array.prototype.slice.call(arguments));
 			}
 			catch (e) {
 				if (!e.reported) {
-					if (L.ui)
-						L.ui.addNotification(e.name || _('Runtime error'),
+					if (classes.ui)
+						classes.ui.addNotification(e.name || _('Runtime error'),
 							E('pre', {}, e.message), 'danger');
 					else
 						DOM.content(document.querySelector('#maincontent'),
@@ -2323,19 +2440,19 @@
 			if (classes[name] != null) {
 				/* Circular dependency */
 				if (from.indexOf(name) != -1)
-					L.raise('DependencyError',
+					LuCI.prototype.raise('DependencyError',
 						'Circular dependency: class "%s" depends on "%s"',
 						name, from.join('" which depends on "'));
 
 				return Promise.resolve(classes[name]);
 			}
 
-			url = '%s/%s.js%s'.format(L.env.base_url, name.replace(/\./g, '/'), (L.env.resource_version ? '?v=' + L.env.resource_version : ''));
+			url = '%s/%s.js%s'.format(env.base_url, name.replace(/\./g, '/'), (env.resource_version ? '?v=' + env.resource_version : ''));
 			from = [ name ].concat(from);
 
 			var compileClass = function(res) {
 				if (!res.ok)
-					L.raise('NetworkError',
+					LuCI.prototype.raise('NetworkError',
 						'HTTP error %d while loading class file "%s"', res.status, url);
 
 				var source = res.text(),
@@ -2345,11 +2462,18 @@
 				    args = '';
 
 				/* find require statements in source */
-				for (var i = 0, off = -1, quote = -1, esc = false; i < source.length; i++) {
+				for (var i = 0, off = -1, prev = -1, quote = -1, comment = -1, esc = false; i < source.length; i++) {
 					var chr = source.charCodeAt(i);
 
 					if (esc) {
 						esc = false;
+					}
+					else if (comment != -1) {
+						if ((comment == 47 && chr == 10) || (comment == 42 && prev == 42 && chr == 47))
+							comment = -1;
+					}
+					else if ((chr == 42 || chr == 47) && prev == 47) {
+						comment = chr;
 					}
 					else if (chr == 92) {
 						esc = true;
@@ -2360,7 +2484,7 @@
 
 						if (m) {
 							var dep = m[1], as = m[2] || dep.replace(/[^a-zA-Z0-9_]/g, '_');
-							depends.push(L.require(dep, from));
+							depends.push(LuCI.prototype.require(dep, from));
 							args += ', ' + as;
 						}
 						else if (!strictmatch.exec(s)) {
@@ -2374,6 +2498,8 @@
 						off = i + 1;
 						quote = chr;
 					}
+
+					prev = chr;
 				}
 
 				/* load dependencies and instantiate class */
@@ -2386,7 +2512,7 @@
 								.format(args, source, res.url));
 					}
 					catch (error) {
-						L.raise('SyntaxError', '%s\n  in %s:%s',
+						LuCI.prototype.raise('SyntaxError', '%s\n  in %s:%s',
 							error.message, res.url, error.lineNumber || '?');
 					}
 
@@ -2394,7 +2520,7 @@
 					_class = _factory.apply(_factory, [window, document, L].concat(instances));
 
 					if (!Class.isSubclass(_class))
-					    L.error('TypeError', '"%s" factory yields invalid constructor', name);
+					    LuCI.prototype.error('TypeError', '"%s" factory yields invalid constructor', name);
 
 					if (_class.displayName == 'AnonymousClass')
 						_class.displayName = toCamelCase(name + 'Class');
@@ -2423,26 +2549,18 @@
 
 		/* DOM setup */
 		probeRPCBaseURL: function() {
-			if (rpcBaseURL == null) {
-				try {
-					rpcBaseURL = window.sessionStorage.getItem('rpcBaseURL');
-				}
-				catch (e) { }
-			}
+			if (rpcBaseURL == null)
+				rpcBaseURL = Session.getLocalData('rpcBaseURL');
 
 			if (rpcBaseURL == null) {
 				var rpcFallbackURL = this.url('admin/ubus');
 
-				rpcBaseURL = Request.get(this.env.ubuspath).then(function(res) {
-					return (rpcBaseURL = (res.status == 400) ? L.env.ubuspath : rpcFallbackURL);
+				rpcBaseURL = Request.get(env.ubuspath).then(function(res) {
+					return (rpcBaseURL = (res.status == 400) ? env.ubuspath : rpcFallbackURL);
 				}, function() {
 					return (rpcBaseURL = rpcFallbackURL);
 				}).then(function(url) {
-					try {
-						window.sessionStorage.setItem('rpcBaseURL', url);
-					}
-					catch (e) { }
-
+					Session.setLocalData('rpcBaseURL', url);
 					return url;
 				});
 			}
@@ -2451,17 +2569,8 @@
 		},
 
 		probeSystemFeatures: function() {
-			var sessionid = classes.rpc.getSessionID();
-
-			if (sysFeatures == null) {
-				try {
-					var data = JSON.parse(window.sessionStorage.getItem('sysFeatures'));
-
-					if (this.isObject(data) && this.isObject(data[sessionid]))
-						sysFeatures = data[sessionid];
-				}
-				catch (e) {}
-			}
+			if (sysFeatures == null)
+				sysFeatures = Session.getLocalData('features');
 
 			if (!this.isObject(sysFeatures)) {
 				sysFeatures = classes.rpc.declare({
@@ -2469,14 +2578,7 @@
 					method: 'getFeatures',
 					expect: { '': {} }
 				})().then(function(features) {
-					try {
-						var data = {};
-						    data[sessionid] = features;
-
-						window.sessionStorage.setItem('sysFeatures', JSON.stringify(data));
-					}
-					catch (e) {}
-
+					Session.setLocalData('features', features);
 					sysFeatures = features;
 
 					return features;
@@ -2484,6 +2586,39 @@
 			}
 
 			return Promise.resolve(sysFeatures);
+		},
+
+		probePreloadClasses: function() {
+			if (preloadClasses == null)
+				preloadClasses = Session.getLocalData('preload');
+
+			if (!Array.isArray(preloadClasses)) {
+				preloadClasses = this.resolveDefault(classes.rpc.declare({
+					object: 'file',
+					method: 'list',
+					params: [ 'path' ],
+					expect: { 'entries': [] }
+				})(this.fspath(this.resource('preload'))), []).then(function(entries) {
+					var classes = [];
+
+					for (var i = 0; i < entries.length; i++) {
+						if (entries[i].type != 'file')
+							continue;
+
+						var m = entries[i].name.match(/(.+)\.js$/);
+
+						if (m)
+							classes.push('preload.%s'.format(m[1]));
+					}
+
+					Session.setLocalData('preload', classes);
+					preloadClasses = classes;
+
+					return classes;
+				});
+			}
+
+			return Promise.resolve(preloadClasses);
 		},
 
 		/**
@@ -2524,7 +2659,7 @@
 		notifySessionExpiry: function() {
 			Poll.stop();
 
-			L.ui.showModal(_('Session expired'), [
+			classes.ui.showModal(_('Session expired'), [
 				E('div', { class: 'alert-message warning' },
 					_('A new login is required since the authentication session expired.')),
 				E('div', { class: 'right' },
@@ -2537,7 +2672,7 @@
 					}, _('To login…')))
 			]);
 
-			L.raise('SessionError', 'Login session is expired');
+			LuCI.prototype.raise('SessionError', 'Login session is expired');
 		},
 
 		/* private */
@@ -2551,10 +2686,13 @@
 			rpcClass.setBaseURL(rpcBaseURL);
 
 			rpcClass.addInterceptor(function(msg, req) {
-				if (!L.isObject(msg) || !L.isObject(msg.error) || msg.error.code != -32002)
+				if (!LuCI.prototype.isObject(msg) ||
+				    !LuCI.prototype.isObject(msg.error) ||
+				    msg.error.code != -32002)
 					return;
 
-				if (!L.isObject(req) || (req.object == 'session' && req.method == 'access'))
+				if (!LuCI.prototype.isObject(req) ||
+				    (req.object == 'session' && req.method == 'access'))
 					return;
 
 				return rpcClass.declare({
@@ -2562,7 +2700,7 @@
 					'method': 'access',
 					'params': [ 'scope', 'object', 'function' ],
 					'expect': { access: true }
-				})('uci', 'luci', 'read').catch(L.notifySessionExpiry);
+				})('uci', 'luci', 'read').catch(LuCI.prototype.notifySessionExpiry);
 			});
 
 			Request.addInterceptor(function(res) {
@@ -2574,10 +2712,31 @@
 				if (!isDenied)
 					return;
 
-				L.notifySessionExpiry();
+				LuCI.prototype.notifySessionExpiry();
 			});
 
-			return this.probeSystemFeatures().finally(this.initDOM);
+			document.addEventListener('poll-start', function(ev) {
+				uiClass.showIndicator('poll-status', _('Refreshing'), function(ev) {
+					Request.poll.active() ? Request.poll.stop() : Request.poll.start();
+				});
+			});
+
+			document.addEventListener('poll-stop', function(ev) {
+				uiClass.showIndicator('poll-status', _('Paused'), null, 'inactive');
+			});
+
+			return Promise.all([
+				this.probeSystemFeatures(),
+				this.probePreloadClasses()
+			]).finally(LuCI.prototype.bind(function() {
+				var tasks = [];
+
+				if (Array.isArray(preloadClasses))
+					for (var i = 0; i < preloadClasses.length; i++)
+						tasks.push(this.require(preloadClasses[i]));
+
+				return Promise.all(tasks);
+			}, this)).finally(this.initDOM);
 		},
 
 		/* private */
@@ -2594,7 +2753,38 @@
 		 * @instance
 		 * @memberof LuCI
 		 */
-		env: {},
+		env: env,
+
+		/**
+		 * Construct an absolute filesystem path relative to the server
+		 * document root.
+		 *
+		 * @instance
+		 * @memberof LuCI
+		 *
+		 * @param {...string} [parts]
+		 * An array of parts to join into a path.
+		 *
+		 * @return {string}
+		 * Return the joined path.
+		 */
+		fspath: function(/* ... */) {
+			var path = env.documentroot;
+
+			for (var i = 0; i < arguments.length; i++)
+				path += '/' + arguments[i];
+
+			var p = path.replace(/\/+$/, '').replace(/\/+/g, '/').split(/\//),
+			    res = [];
+
+			for (var i = 0; i < p.length; i++)
+				if (p[i] == '..')
+					res.pop();
+				else if (p[i] != '.')
+					res.push(p[i]);
+
+			return res.join('/');
+		},
 
 		/**
 		 * Construct a relative URL path from the given prefix and parts.
@@ -2648,7 +2838,7 @@
 		 * Returns the resulting URL path.
 		 */
 		url: function() {
-			return this.path(this.env.scriptname, arguments);
+			return this.path(env.scriptname, arguments);
 		},
 
 		/**
@@ -2670,7 +2860,7 @@
 		 * Returns the resulting URL path.
 		 */
 		resource: function() {
-			return this.path(this.env.resource, arguments);
+			return this.path(env.resource, arguments);
 		},
 
 		/**
@@ -2692,7 +2882,7 @@
 		 * Returns the resulting URL path.
 		 */
 		media: function() {
-			return this.path(this.env.media, arguments);
+			return this.path(env.media, arguments);
 		},
 
 		/**
@@ -2705,7 +2895,7 @@
 		 * Returns the URL path to the current view.
 		 */
 		location: function() {
-			return this.path(this.env.scriptname, this.env.requestpath);
+			return this.path(env.scriptname, env.requestpath);
 		},
 
 
@@ -2949,9 +3139,9 @@
 		 */
 		poll: function(interval, url, args, cb, post) {
 			if (interval !== null && interval <= 0)
-				interval = this.env.pollinterval;
+				interval = env.pollinterval;
 
-			var data = post ? { token: this.env.token } : null,
+			var data = post ? { token: env.token } : null,
 			    method = post ? 'POST' : 'GET';
 
 			if (!/^(?:\/|\S+:\/\/)/.test(url))
@@ -2970,6 +3160,22 @@
 							try { json = res.json() } catch(e) {}
 						cb(res.xhr, json, res.duration);
 					});
+		},
+
+		/**
+		 * Check whether a view has sufficient permissions.
+		 *
+		 * @return {boolean|null}
+		 * Returns `null` if the current session has no permission at all to
+		 * load resources required by the view. Returns `false` if readonly
+		 * permissions are granted or `true` if at least one required ACL
+		 * group is granted with write permissions.
+		 */
+		hasViewPermission: function() {
+			if (!this.isObject(env.nodespec) || !env.nodespec.satisfied)
+			    return null;
+
+			return !env.nodespec.readonly;
 		},
 
 		/**
@@ -3115,7 +3321,7 @@
 		 */
 		get: function(url, data, callback, timeout) {
 			this.active = true;
-			L.get(url, data, this._response.bind(this, callback), timeout);
+			LuCI.prototype.get(url, data, this._response.bind(this, callback), timeout);
 		},
 
 		/**
@@ -3142,7 +3348,7 @@
 		 */
 		post: function(url, data, callback, timeout) {
 			this.active = true;
-			L.post(url, data, this._response.bind(this, callback), timeout);
+			LuCI.prototype.post(url, data, this._response.bind(this, callback), timeout);
 		},
 
 		/**
@@ -3196,12 +3402,12 @@
 		 * Throws an `InternalError` with the message `Not implemented`
 		 * when invoked.
 		 */
-		send_form: function() { L.error('InternalError', 'Not implemented') },
+		send_form: function() { LuCI.prototype.error('InternalError', 'Not implemented') },
 	});
 
-	XHR.get = function() { return window.L.get.apply(window.L, arguments) };
-	XHR.post = function() { return window.L.post.apply(window.L, arguments) };
-	XHR.poll = function() { return window.L.poll.apply(window.L, arguments) };
+	XHR.get = function() { return LuCI.prototype.get.apply(LuCI.prototype, arguments) };
+	XHR.post = function() { return LuCI.prototype.post.apply(LuCI.prototype, arguments) };
+	XHR.poll = function() { return LuCI.prototype.poll.apply(LuCI.prototype, arguments) };
 	XHR.stop = Request.poll.remove.bind(Request.poll);
 	XHR.halt = Request.poll.stop.bind(Request.poll);
 	XHR.run = Request.poll.start.bind(Request.poll);
